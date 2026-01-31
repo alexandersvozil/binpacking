@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bin Packing Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            overflow: hidden;
+        }
+
+        #container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #controls {
+            width: 320px;
+            background: #16213e;
+            padding: 20px;
+            overflow-y: auto;
+            color: #e8e8e8;
+            border-left: 2px solid #0f3460;
+        }
+
+        h1 {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            color: #e94560;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.1em;
+            margin: 20px 0 10px;
+            color: #0f9b8e;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 5px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #a8a8a8;
+        }
+
+        input[type="number"], input[type="range"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #0f3460;
+            border-radius: 4px;
+            background: #1a1a2e;
+            color: #e8e8e8;
+        }
+
+        input[type="range"] {
+            padding: 0;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #e94560;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ff6b6b;
+        }
+
+        .btn-secondary {
+            background: #0f3460;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1a4b8c;
+        }
+
+        .stats-box {
+            background: #1a1a2e;
+            border: 1px solid #0f3460;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .stats-box h3 {
+            font-size: 0.85em;
+            color: #0f9b8e;
+            margin-bottom: 10px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 0.85em;
+        }
+
+        .stat-value {
+            color: #e94560;
+            font-weight: bold;
+        }
+
+        .comparison {
+            display: flex;
+            gap: 10px;
+        }
+
+        .comparison .stats-box {
+            flex: 1;
+        }
+
+        .mode-indicator {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .mode-sequential {
+            background: rgba(233, 69, 96, 0.2);
+            color: #e94560;
+        }
+
+        .mode-optimized {
+            background: rgba(15, 155, 142, 0.2);
+            color: #0f9b8e;
+        }
+
+        #snapshot-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .snapshot-thumb {
+            width: 60px;
+            height: 45px;
+            border: 2px solid #0f3460;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .snapshot-thumb:hover {
+            border-color: #e94560;
+        }
+
+        .snapshot-thumb.active {
+            border-color: #0f9b8e;
+        }
+
+        #info-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(22, 33, 62, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            color: #e8e8e8;
+            font-size: 0.85em;
+            min-width: 200px;
+        }
+
+        .speed-display {
+            text-align: center;
+            color: #a8a8a8;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="canvas-container">
+            <div id="info-overlay">
+                <div class="stat-row">
+                    <span>Packages in Cart:</span>
+                    <span class="stat-value" id="package-count">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Cart #:</span>
+                    <span class="stat-value" id="cart-number">1</span>
+                </div>
+                <div class="stat-row">
+                    <span>Total Packages:</span>
+                    <span class="stat-value" id="total-packages">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Volume Used:</span>
+                    <span class="stat-value" id="volume-used">0%</span>
+                </div>
+            </div>
+        </div>
+        <div id="controls">
+            <h1>📦 Bin Packing Visualizer</h1>
+
+            <h2>Cart Dimensions</h2>
+            <div class="control-group">
+                <label>Width: <span id="cart-width-val">4</span></label>
+                <input type="range" id="cart-width" min="2" max="8" value="4" step="0.5">
+            </div>
+            <div class="control-group">
+                <label>Depth: <span id="cart-depth-val">4</span></label>
+                <input type="range" id="cart-depth" min="2" max="8" value="4" step="0.5">
+            </div>
+            <div class="control-group">
+                <label>Height: <span id="cart-height-val">5</span></label>
+                <input type="range" id="cart-height" min="2" max="10" value="5" step="0.5">
+            </div>
+
+            <h2>Simulation Speed</h2>
+            <div class="control-group">
+                <input type="range" id="speed" min="0.5" max="5" value="1" step="0.5">
+                <div class="speed-display"><span id="speed-val">1</span>x speed</div>
+            </div>
+
+            <h2>Packing Mode</h2>
+            <div class="mode-indicator mode-sequential" id="mode-display">
+                Sequential Arrival (Tetris)
+            </div>
+            <button class="btn-secondary" id="toggle-mode">Switch to Optimized Mode</button>
+
+            <h2>Controls</h2>
+            <button class="btn-primary" id="start-btn">Start Simulation</button>
+            <button class="btn-secondary" id="pause-btn">Pause</button>
+            <button class="btn-secondary" id="reset-btn">Reset</button>
+            <button class="btn-secondary" id="add-10-btn">Add 10 Packages</button>
+
+            <h2>Statistics Comparison</h2>
+            <div class="comparison">
+                <div class="stats-box">
+                    <h3>Sequential</h3>
+                    <div class="stat-row">
+                        <span>Efficiency:</span>
+                        <span class="stat-value" id="seq-efficiency">0%</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Height:</span>
+                        <span class="stat-value" id="seq-height">0</span>
+                    </div>
+                </div>
+                <div class="stats-box">
+                    <h3>Optimized</h3>
+                    <div class="stat-row">
+                        <span>Efficiency:</span>
+                        <span class="stat-value" id="opt-efficiency">0%</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Height:</span>
+                        <span class="stat-value" id="opt-height">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Snapshots (every 10 packages)</h2>
+            <div id="snapshot-gallery"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // ==================== CONFIGURATION ====================
+        const CONFIG = {
+            cart: { width: 4, depth: 4, height: 5 },
+            maxPackagesPerCart: 50,
+            packageTypes: [
+                { name: 'Small Box', w: 0.4, d: 0.4, h: 0.3, color: 0xf4a460 },
+                { name: 'Medium Box', w: 0.6, d: 0.5, h: 0.4, color: 0xdeb887 },
+                { name: 'Large Box', w: 0.8, d: 0.6, h: 0.5, color: 0xd2691e },
+                { name: 'Flat Box', w: 0.7, d: 0.7, h: 0.2, color: 0xcd853f },
+                { name: 'Tall Box', w: 0.4, d: 0.4, h: 0.7, color: 0xa0522d },
+                { name: 'Wide Box', w: 0.9, d: 0.4, h: 0.3, color: 0x8b4513 },
+                { name: 'Cube', w: 0.5, d: 0.5, h: 0.5, color: 0xbc8f8f },
+                { name: 'Long Box', w: 1.0, d: 0.3, h: 0.3, color: 0xf5deb3 }
+            ],
+            conveyorSpeed: 2,
+            dropSpeed: 4
+        };
+
+        // ==================== THREE.JS SETUP ====================
+        let scene, camera, renderer, controls;
+        let conveyor, cart, cartBase;
+        let packages = [];
+        let packagesInCart = [];
+        let animatingPackages = [];
+        let isRunning = false;
+        let isPaused = false;
+        let speedMultiplier = 1;
+        let packingMode = 'sequential'; // 'sequential' or 'optimized'
+        let cartNumber = 1;
+        let totalPackages = 0;
+        let sequentialStats = { efficiency: 0, maxHeight: 0 };
+        let optimizedStats = { efficiency: 0, maxHeight: 0 };
+        let snapshots = [];
+        let pendingPackages = []; // For optimized mode batching
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            scene.fog = new THREE.Fog(0x1a1a2e, 15, 30);
+
+            // Camera
+            const container = document.getElementById('canvas-container');
+            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(8, 8, 8);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.target.set(0, 2, 0);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 15, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 50;
+            directionalLight.shadow.camera.left = -15;
+            directionalLight.shadow.camera.right = 15;
+            directionalLight.shadow.camera.top = 15;
+            directionalLight.shadow.camera.bottom = -15;
+            scene.add(directionalLight);
+
+            const pointLight = new THREE.PointLight(0xe94560, 0.5, 20);
+            pointLight.position.set(-5, 8, 5);
+            scene.add(pointLight);
+
+            // Ground
+            const groundGeometry = new THREE.PlaneGeometry(30, 30);
+            const groundMaterial = new THREE.MeshStandardMaterial({
+                color: 0x16213e,
+                roughness: 0.8
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Grid helper
+            const gridHelper = new THREE.GridHelper(30, 30, 0x0f3460, 0x0f3460);
+            gridHelper.position.y = 0.01;
+            scene.add(gridHelper);
+
+            createConveyor();
+            createCart();
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+
+            // Setup UI
+            setupUI();
+
+            // Start animation loop
+            animate();
+        }
+
+        function createConveyor() {
+            conveyor = new THREE.Group();
+
+            // Conveyor belt base
+            const beltGeometry = new THREE.BoxGeometry(8, 0.3, 1.5);
+            const beltMaterial = new THREE.MeshStandardMaterial({
+                color: 0x333333,
+                roughness: 0.7
+            });
+            const belt = new THREE.Mesh(beltGeometry, beltMaterial);
+            belt.position.set(-2, 2.5, -3);
+            belt.castShadow = true;
+            belt.receiveShadow = true;
+            conveyor.add(belt);
+
+            // Conveyor surface (animated)
+            const surfaceGeometry = new THREE.BoxGeometry(7.8, 0.1, 1.3);
+            const surfaceMaterial = new THREE.MeshStandardMaterial({
+                color: 0x1a1a1a,
+                roughness: 0.5
+            });
+            const surface = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
+            surface.position.set(-2, 2.66, -3);
+            surface.name = 'conveyorSurface';
+            conveyor.add(surface);
+
+            // Conveyor legs
+            const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 2.3);
+            const legMaterial = new THREE.MeshStandardMaterial({ color: 0x444444 });
+
+            [[-5, -3.5], [-5, -2.5], [1, -3.5], [1, -2.5]].forEach(([x, z]) => {
+                const leg = new THREE.Mesh(legGeometry, legMaterial);
+                leg.position.set(x, 1.15, z);
+                leg.castShadow = true;
+                conveyor.add(leg);
+            });
+
+            // Conveyor rollers (visual detail)
+            const rollerGeometry = new THREE.CylinderGeometry(0.08, 0.08, 1.4);
+            const rollerMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
+            for (let x = -5.5; x <= 1.5; x += 0.5) {
+                const roller = new THREE.Mesh(rollerGeometry, rollerMaterial);
+                roller.rotation.x = Math.PI / 2;
+                roller.position.set(x, 2.55, -3);
+                conveyor.add(roller);
+            }
+
+            scene.add(conveyor);
+        }
+
+        function createCart() {
+            if (cart) {
+                scene.remove(cart);
+            }
+
+            cart = new THREE.Group();
+            const { width, depth, height } = CONFIG.cart;
+
+            // Cart base
+            const baseGeometry = new THREE.BoxGeometry(width + 0.2, 0.15, depth + 0.2);
+            const baseMaterial = new THREE.MeshStandardMaterial({
+                color: 0x4a4a4a,
+                roughness: 0.6
+            });
+            cartBase = new THREE.Mesh(baseGeometry, baseMaterial);
+            cartBase.position.y = 0.5;
+            cartBase.castShadow = true;
+            cartBase.receiveShadow = true;
+            cart.add(cartBase);
+
+            // Cart walls (wireframe for visibility)
+            const wallMaterial = new THREE.MeshStandardMaterial({
+                color: 0x0f9b8e,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+
+            // Back wall
+            const backWall = new THREE.Mesh(
+                new THREE.PlaneGeometry(width, height),
+                wallMaterial
+            );
+            backWall.position.set(0, 0.5 + height/2, -depth/2);
+            cart.add(backWall);
+
+            // Front wall
+            const frontWall = new THREE.Mesh(
+                new THREE.PlaneGeometry(width, height),
+                wallMaterial
+            );
+            frontWall.position.set(0, 0.5 + height/2, depth/2);
+            frontWall.rotation.y = Math.PI;
+            cart.add(frontWall);
+
+            // Left wall
+            const leftWall = new THREE.Mesh(
+                new THREE.PlaneGeometry(depth, height),
+                wallMaterial
+            );
+            leftWall.position.set(-width/2, 0.5 + height/2, 0);
+            leftWall.rotation.y = Math.PI / 2;
+            cart.add(leftWall);
+
+            // Right wall
+            const rightWall = new THREE.Mesh(
+                new THREE.PlaneGeometry(depth, height),
+                wallMaterial
+            );
+            rightWall.position.set(width/2, 0.5 + height/2, 0);
+            rightWall.rotation.y = -Math.PI / 2;
+            cart.add(rightWall);
+
+            // Cart frame (edges)
+            const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x0f9b8e });
+            const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(width, height, depth));
+            const edgeLines = new THREE.LineSegments(edges, edgeMaterial);
+            edgeLines.position.y = 0.5 + height/2;
+            cart.add(edgeLines);
+
+            // Wheels
+            const wheelGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.15, 16);
+            const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x222222 });
+
+            [
+                [-width/2 + 0.3, -depth/2 + 0.3],
+                [width/2 - 0.3, -depth/2 + 0.3],
+                [-width/2 + 0.3, depth/2 - 0.3],
+                [width/2 - 0.3, depth/2 - 0.3]
+            ].forEach(([x, z]) => {
+                const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+                wheel.rotation.z = Math.PI / 2;
+                wheel.position.set(x, 0.2, z);
+                wheel.castShadow = true;
+                cart.add(wheel);
+            });
+
+            scene.add(cart);
+        }
+
+        function createPackage(typeIndex = null) {
+            if (typeIndex === null) {
+                typeIndex = Math.floor(Math.random() * CONFIG.packageTypes.length);
+            }
+            const type = CONFIG.packageTypes[typeIndex];
+
+            // Add slight random variation
+            const variation = 0.9 + Math.random() * 0.2;
+            const w = type.w * variation;
+            const d = type.d * variation;
+            const h = type.h * variation;
+
+            const geometry = new THREE.BoxGeometry(w, h, d);
+
+            // Create cardboard-like material
+            const material = new THREE.MeshStandardMaterial({
+                color: type.color,
+                roughness: 0.8,
+                metalness: 0.1
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            // Add tape detail
+            const tapeGeometry = new THREE.BoxGeometry(w * 0.15, h + 0.01, d + 0.01);
+            const tapeMaterial = new THREE.MeshStandardMaterial({
+                color: 0xd4a76a,
+                roughness: 0.5
+            });
+            const tape = new THREE.Mesh(tapeGeometry, tapeMaterial);
+            mesh.add(tape);
+
+            // Store dimensions
+            mesh.userData = {
+                width: w,
+                depth: d,
+                height: h,
+                volume: w * d * h,
+                type: type.name
+            };
+
+            return mesh;
+        }
+
+        function spawnPackage() {
+            const pkg = createPackage();
+            pkg.position.set(-6, 2.8, -3);
+            scene.add(pkg);
+            packages.push(pkg);
+
+            // Add to animation queue
+            animatingPackages.push({
+                mesh: pkg,
+                state: 'conveyor',
+                targetX: 1.5,
+                velocity: new THREE.Vector3(0, 0, 0)
+            });
+        }
+
+        function findPlacementPosition(pkg) {
+            const { width, depth, height } = CONFIG.cart;
+            const pkgW = pkg.userData.width;
+            const pkgD = pkg.userData.depth;
+            const pkgH = pkg.userData.height;
+
+            // Grid-based placement search
+            const gridStep = 0.1;
+            let bestPosition = null;
+            let lowestY = Infinity;
+
+            for (let x = -width/2 + pkgW/2; x <= width/2 - pkgW/2; x += gridStep) {
+                for (let z = -depth/2 + pkgD/2; z <= depth/2 - pkgD/2; z += gridStep) {
+                    // Find the highest package at this x,z position
+                    let y = 0.58; // Base height (cart floor)
+
+                    for (const placedPkg of packagesInCart) {
+                        if (boxesOverlap2D(
+                            x, z, pkgW, pkgD,
+                            placedPkg.position.x, placedPkg.position.z,
+                            placedPkg.userData.width, placedPkg.userData.depth
+                        )) {
+                            const topY = placedPkg.position.y + placedPkg.userData.height/2;
+                            y = Math.max(y, topY);
+                        }
+                    }
+
+                    const finalY = y + pkgH/2;
+
+                    // Check if package would exceed cart height
+                    if (finalY + pkgH/2 <= 0.5 + height + 0.5) { // Small tolerance
+                        if (finalY < lowestY) {
+                            lowestY = finalY;
+                            bestPosition = new THREE.Vector3(x, finalY, z);
+                        }
+                    }
+                }
+            }
+
+            // If no position found, stack on top
+            if (!bestPosition) {
+                const maxY = packagesInCart.reduce((max, p) =>
+                    Math.max(max, p.position.y + p.userData.height/2), 0.58);
+                bestPosition = new THREE.Vector3(0, maxY + pkgH/2, 0);
+            }
+
+            return bestPosition;
+        }
+
+        function findOptimizedPlacement(packages) {
+            // First Fit Decreasing Height (FFDH) heuristic with 3D adaptation
+            const { width, depth, height } = CONFIG.cart;
+
+            // Sort packages by volume (largest first)
+            const sorted = [...packages].sort((a, b) => b.userData.volume - a.userData.volume);
+
+            const placements = [];
+            const placedBoxes = [...packagesInCart];
+
+            for (const pkg of sorted) {
+                const pkgW = pkg.userData.width;
+                const pkgD = pkg.userData.depth;
+                const pkgH = pkg.userData.height;
+
+                let bestPosition = null;
+                let lowestY = Infinity;
+                let bestScore = -Infinity;
+
+                // Try different rotations
+                const rotations = [
+                    { w: pkgW, d: pkgD, h: pkgH },
+                    { w: pkgD, d: pkgW, h: pkgH },
+                ];
+
+                for (const rot of rotations) {
+                    const gridStep = 0.05; // Finer grid for optimization
+
+                    for (let x = -width/2 + rot.w/2; x <= width/2 - rot.w/2; x += gridStep) {
+                        for (let z = -depth/2 + rot.d/2; z <= depth/2 - rot.d/2; z += gridStep) {
+                            let y = 0.58;
+
+                            for (const placedPkg of placedBoxes) {
+                                const pW = placedPkg.userData.currentWidth || placedPkg.userData.width;
+                                const pD = placedPkg.userData.currentDepth || placedPkg.userData.depth;
+
+                                if (boxesOverlap2D(x, z, rot.w, rot.d,
+                                    placedPkg.position.x, placedPkg.position.z, pW, pD)) {
+                                    const topY = placedPkg.position.y + placedPkg.userData.height/2;
+                                    y = Math.max(y, topY);
+                                }
+                            }
+
+                            const finalY = y + rot.h/2;
+
+                            if (finalY + rot.h/2 <= 0.5 + height + 0.5) {
+                                // Score based on position (prefer corners, low positions)
+                                const cornerBonus = (Math.abs(x) + Math.abs(z)) * 0.1;
+                                const heightPenalty = finalY * 2;
+                                const score = cornerBonus - heightPenalty;
+
+                                if (finalY < lowestY || (finalY === lowestY && score > bestScore)) {
+                                    lowestY = finalY;
+                                    bestScore = score;
+                                    bestPosition = {
+                                        pos: new THREE.Vector3(x, finalY, z),
+                                        rotation: rot.w !== pkgW ? Math.PI / 2 : 0,
+                                        dims: rot
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (bestPosition) {
+                    placements.push({ pkg, ...bestPosition });
+
+                    // Add virtual placed box for collision detection
+                    placedBoxes.push({
+                        position: bestPosition.pos,
+                        userData: {
+                            width: bestPosition.dims.w,
+                            depth: bestPosition.dims.d,
+                            height: bestPosition.dims.h,
+                            currentWidth: bestPosition.dims.w,
+                            currentDepth: bestPosition.dims.d
+                        }
+                    });
+                } else {
+                    const maxY = placedBoxes.reduce((max, p) =>
+                        Math.max(max, p.position.y + p.userData.height/2), 0.58);
+                    placements.push({
+                        pkg,
+                        pos: new THREE.Vector3(0, maxY + pkgH/2, 0),
+                        rotation: 0,
+                        dims: { w: pkgW, d: pkgD, h: pkgH }
+                    });
+                }
+            }
+
+            return placements;
+        }
+
+        function boxesOverlap2D(x1, z1, w1, d1, x2, z2, w2, d2) {
+            return Math.abs(x1 - x2) < (w1 + w2) / 2 - 0.01 &&
+                   Math.abs(z1 - z2) < (d1 + d2) / 2 - 0.01;
+        }
+
+        function placePackageInCart(pkg, position, rotation = 0) {
+            if (rotation) {
+                pkg.rotation.y = rotation;
+                // Swap stored dimensions for collision detection
+                const temp = pkg.userData.width;
+                pkg.userData.currentWidth = pkg.userData.depth;
+                pkg.userData.currentDepth = temp;
+            } else {
+                pkg.userData.currentWidth = pkg.userData.width;
+                pkg.userData.currentDepth = pkg.userData.depth;
+            }
+
+            packagesInCart.push(pkg);
+            totalPackages++;
+
+            // Check for snapshot (every 10 packages)
+            if (packagesInCart.length % 10 === 0) {
+                takeSnapshot();
+            }
+
+            // Check for cart full
+            if (packagesInCart.length >= CONFIG.maxPackagesPerCart) {
+                startNewCart();
+            }
+
+            updateStats();
+        }
+
+        function takeSnapshot() {
+            const count = packagesInCart.length;
+
+            // Create mini canvas for snapshot
+            const snapshotRenderer = new THREE.WebGLRenderer({ antialias: true });
+            snapshotRenderer.setSize(120, 90);
+
+            const snapshotScene = new THREE.Scene();
+            snapshotScene.background = new THREE.Color(0x1a1a2e);
+
+            const snapshotCamera = new THREE.PerspectiveCamera(60, 120/90, 0.1, 100);
+            snapshotCamera.position.set(6, 6, 6);
+            snapshotCamera.lookAt(0, 2, 0);
+
+            // Clone cart and packages for snapshot
+            const cartClone = cart.clone();
+            snapshotScene.add(cartClone);
+
+            packagesInCart.forEach(pkg => {
+                const clone = pkg.clone();
+                snapshotScene.add(clone);
+            });
+
+            // Add light
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(5, 10, 5);
+            snapshotScene.add(light);
+            snapshotScene.add(new THREE.AmbientLight(0x404040));
+
+            snapshotRenderer.render(snapshotScene, snapshotCamera);
+
+            const dataURL = snapshotRenderer.domElement.toDataURL();
+            snapshotRenderer.dispose();
+
+            snapshots.push({
+                count,
+                mode: packingMode,
+                dataURL,
+                efficiency: calculateEfficiency()
+            });
+
+            updateSnapshotGallery();
+        }
+
+        function updateSnapshotGallery() {
+            const gallery = document.getElementById('snapshot-gallery');
+            gallery.innerHTML = '';
+
+            snapshots.forEach((snap, index) => {
+                const img = document.createElement('img');
+                img.src = snap.dataURL;
+                img.className = 'snapshot-thumb';
+                img.title = `${snap.count} packages (${snap.mode}) - ${snap.efficiency.toFixed(1)}% efficiency`;
+                gallery.appendChild(img);
+            });
+        }
+
+        function calculateEfficiency() {
+            if (packagesInCart.length === 0) return 0;
+
+            const totalPackageVolume = packagesInCart.reduce((sum, pkg) =>
+                sum + pkg.userData.volume, 0);
+
+            // Calculate used volume (bounding box)
+            let maxY = 0;
+            packagesInCart.forEach(pkg => {
+                const topY = pkg.position.y + pkg.userData.height/2 - 0.5;
+                maxY = Math.max(maxY, topY);
+            });
+
+            const usedVolume = CONFIG.cart.width * CONFIG.cart.depth * maxY;
+            const cartVolume = CONFIG.cart.width * CONFIG.cart.depth * CONFIG.cart.height;
+
+            return usedVolume > 0 ? (totalPackageVolume / usedVolume) * 100 : 0;
+        }
+
+        function startNewCart() {
+            // Store stats
+            if (packingMode === 'sequential') {
+                sequentialStats = {
+                    efficiency: calculateEfficiency(),
+                    maxHeight: getMaxHeight()
+                };
+            } else {
+                optimizedStats = {
+                    efficiency: calculateEfficiency(),
+                    maxHeight: getMaxHeight()
+                };
+            }
+
+            // Animate old cart away
+            const oldCart = cart;
+            const oldPackages = [...packagesInCart];
+
+            // Move everything to the side
+            const moveAway = () => {
+                oldCart.position.x += 0.1;
+                oldPackages.forEach(p => p.position.x += 0.1);
+
+                if (oldCart.position.x < 10) {
+                    requestAnimationFrame(moveAway);
+                } else {
+                    scene.remove(oldCart);
+                    oldPackages.forEach(p => scene.remove(p));
+                }
+            };
+            moveAway();
+
+            // Create new cart
+            packagesInCart = [];
+            cartNumber++;
+            createCart();
+            updateStats();
+        }
+
+        function getMaxHeight() {
+            if (packagesInCart.length === 0) return 0;
+            return Math.max(...packagesInCart.map(pkg =>
+                pkg.position.y + pkg.userData.height/2 - 0.5));
+        }
+
+        function updateStats() {
+            document.getElementById('package-count').textContent = packagesInCart.length;
+            document.getElementById('cart-number').textContent = cartNumber;
+            document.getElementById('total-packages').textContent = totalPackages;
+
+            const efficiency = calculateEfficiency();
+            document.getElementById('volume-used').textContent = efficiency.toFixed(1) + '%';
+
+            if (packingMode === 'sequential') {
+                document.getElementById('seq-efficiency').textContent = efficiency.toFixed(1) + '%';
+                document.getElementById('seq-height').textContent = getMaxHeight().toFixed(2);
+            } else {
+                document.getElementById('opt-efficiency').textContent = efficiency.toFixed(1) + '%';
+                document.getElementById('opt-height').textContent = getMaxHeight().toFixed(2);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (isRunning && !isPaused) {
+                updateAnimations();
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        let spawnTimer = 0;
+        const SPAWN_INTERVAL = 2000; // ms between spawns
+
+        function updateAnimations() {
+            const delta = 16 * speedMultiplier; // Approximate frame time
+
+            // Spawn new packages
+            spawnTimer += delta;
+            if (spawnTimer >= SPAWN_INTERVAL / speedMultiplier) {
+                spawnTimer = 0;
+                if (packagesInCart.length < CONFIG.maxPackagesPerCart) {
+                    if (packingMode === 'sequential') {
+                        spawnPackage();
+                    } else {
+                        // Optimized mode: batch packages
+                        const pkg = createPackage();
+                        pkg.position.set(-6, 2.8, -3);
+                        pkg.visible = true;
+                        scene.add(pkg);
+                        packages.push(pkg);
+                        pendingPackages.push(pkg);
+
+                        animatingPackages.push({
+                            mesh: pkg,
+                            state: 'conveyor',
+                            targetX: 1.5,
+                            velocity: new THREE.Vector3(0, 0, 0),
+                            waitForBatch: true
+                        });
+                    }
+                }
+            }
+
+            // Update animating packages
+            for (let i = animatingPackages.length - 1; i >= 0; i--) {
+                const anim = animatingPackages[i];
+                const pkg = anim.mesh;
+
+                if (anim.state === 'conveyor') {
+                    // Move along conveyor
+                    pkg.position.x += CONFIG.conveyorSpeed * 0.016 * speedMultiplier;
+
+                    // Add slight bobbing
+                    pkg.position.y = 2.8 + Math.sin(Date.now() * 0.01) * 0.02;
+
+                    if (pkg.position.x >= anim.targetX) {
+                        if (anim.waitForBatch && pendingPackages.length < 10 &&
+                            packagesInCart.length + pendingPackages.length < CONFIG.maxPackagesPerCart) {
+                            // Wait at end of conveyor for batch
+                            pkg.position.x = anim.targetX;
+                            anim.state = 'waiting';
+                        } else if (anim.waitForBatch) {
+                            // Process batch
+                            anim.state = 'waiting';
+                            processBatch();
+                        } else {
+                            // Sequential mode: drop immediately
+                            anim.state = 'dropping';
+                            anim.targetPosition = findPlacementPosition(pkg);
+                        }
+                    }
+                } else if (anim.state === 'waiting') {
+                    // Package waiting at end of conveyor
+                    pkg.position.x = anim.targetX;
+
+                    // Check if batch should be processed
+                    if (pendingPackages.length >= 10 ||
+                        packagesInCart.length + pendingPackages.length >= CONFIG.maxPackagesPerCart) {
+                        processBatch();
+                    }
+                } else if (anim.state === 'dropping') {
+                    // Drop into cart
+                    const target = anim.targetPosition;
+
+                    // Arc trajectory
+                    const dx = target.x - pkg.position.x;
+                    const dz = target.z - pkg.position.z;
+                    const dy = target.y - pkg.position.y;
+
+                    const speed = CONFIG.dropSpeed * 0.016 * speedMultiplier;
+
+                    pkg.position.x += dx * speed;
+                    pkg.position.z += dz * speed;
+
+                    // Gravity-like drop
+                    anim.velocity.y -= 0.01 * speedMultiplier;
+                    pkg.position.y += anim.velocity.y;
+
+                    // Check if reached target
+                    const dist = pkg.position.distanceTo(target);
+                    if (dist < 0.1 || pkg.position.y <= target.y) {
+                        pkg.position.copy(target);
+                        if (anim.rotation) {
+                            pkg.rotation.y = anim.rotation;
+                        }
+                        placePackageInCart(pkg, target, anim.rotation || 0);
+                        animatingPackages.splice(i, 1);
+                    }
+                }
+            }
+        }
+
+        function processBatch() {
+            if (pendingPackages.length === 0) return;
+
+            // Get optimized placements
+            const placements = findOptimizedPlacement(pendingPackages);
+
+            // Update animations with optimized positions
+            placements.forEach(placement => {
+                const anim = animatingPackages.find(a => a.mesh === placement.pkg);
+                if (anim) {
+                    anim.state = 'dropping';
+                    anim.targetPosition = placement.pos;
+                    anim.rotation = placement.rotation;
+                    anim.velocity = new THREE.Vector3(0, 0, 0);
+                }
+            });
+
+            pendingPackages = [];
+        }
+
+        function setupUI() {
+            // Cart dimension controls
+            ['width', 'depth', 'height'].forEach(dim => {
+                const slider = document.getElementById(`cart-${dim}`);
+                const display = document.getElementById(`cart-${dim}-val`);
+
+                slider.addEventListener('input', () => {
+                    display.textContent = slider.value;
+                    CONFIG.cart[dim] = parseFloat(slider.value);
+                    if (!isRunning) {
+                        createCart();
+                    }
+                });
+            });
+
+            // Speed control
+            const speedSlider = document.getElementById('speed');
+            const speedDisplay = document.getElementById('speed-val');
+            speedSlider.addEventListener('input', () => {
+                speedMultiplier = parseFloat(speedSlider.value);
+                speedDisplay.textContent = speedMultiplier;
+            });
+
+            // Mode toggle
+            document.getElementById('toggle-mode').addEventListener('click', () => {
+                packingMode = packingMode === 'sequential' ? 'optimized' : 'sequential';
+                const display = document.getElementById('mode-display');
+                const btn = document.getElementById('toggle-mode');
+
+                if (packingMode === 'sequential') {
+                    display.textContent = 'Sequential Arrival (Tetris)';
+                    display.className = 'mode-indicator mode-sequential';
+                    btn.textContent = 'Switch to Optimized Mode';
+                } else {
+                    display.textContent = 'Optimized (Batch every 10)';
+                    display.className = 'mode-indicator mode-optimized';
+                    btn.textContent = 'Switch to Sequential Mode';
+                }
+            });
+
+            // Control buttons
+            document.getElementById('start-btn').addEventListener('click', () => {
+                isRunning = true;
+                isPaused = false;
+                document.getElementById('start-btn').textContent = 'Running...';
+            });
+
+            document.getElementById('pause-btn').addEventListener('click', () => {
+                isPaused = !isPaused;
+                document.getElementById('pause-btn').textContent = isPaused ? 'Resume' : 'Pause';
+            });
+
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                reset();
+            });
+
+            document.getElementById('add-10-btn').addEventListener('click', () => {
+                // Quickly add 10 packages
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => {
+                        if (packagesInCart.length < CONFIG.maxPackagesPerCart) {
+                            const pkg = createPackage();
+                            scene.add(pkg);
+                            packages.push(pkg);
+
+                            if (packingMode === 'optimized') {
+                                pendingPackages.push(pkg);
+                            }
+
+                            const position = packingMode === 'sequential'
+                                ? findPlacementPosition(pkg)
+                                : null;
+
+                            if (packingMode === 'sequential') {
+                                pkg.position.copy(position);
+                                placePackageInCart(pkg, position);
+                            }
+                        }
+                    }, i * 100);
+                }
+
+                if (packingMode === 'optimized') {
+                    setTimeout(() => {
+                        const placements = findOptimizedPlacement(pendingPackages);
+                        placements.forEach(placement => {
+                            placement.pkg.position.copy(placement.pos);
+                            if (placement.rotation) {
+                                placement.pkg.rotation.y = placement.rotation;
+                            }
+                            placePackageInCart(placement.pkg, placement.pos, placement.rotation);
+                        });
+                        pendingPackages = [];
+                    }, 1100);
+                }
+            });
+        }
+
+        function reset() {
+            isRunning = false;
+            isPaused = false;
+
+            // Remove all packages
+            packages.forEach(pkg => scene.remove(pkg));
+            packages = [];
+            packagesInCart = [];
+            animatingPackages = [];
+            pendingPackages = [];
+
+            cartNumber = 1;
+            totalPackages = 0;
+            spawnTimer = 0;
+            snapshots = [];
+
+            createCart();
+            updateStats();
+            updateSnapshotGallery();
+
+            document.getElementById('start-btn').textContent = 'Start Simulation';
+            document.getElementById('pause-btn').textContent = 'Pause';
+            document.getElementById('seq-efficiency').textContent = '0%';
+            document.getElementById('seq-height').textContent = '0';
+            document.getElementById('opt-efficiency').textContent = '0%';
+            document.getElementById('opt-height').textContent = '0';
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
