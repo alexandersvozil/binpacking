@@ -102,6 +102,33 @@
             color: #0f9b8e;
         }
 
+        .repack-btn {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 14px;
+            background: rgba(233, 69, 96, 0.9);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 600;
+            z-index: 10;
+            transition: all 0.3s;
+        }
+
+        .repack-btn:hover {
+            background: rgba(255, 107, 107, 1);
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        .repack-btn:disabled {
+            background: rgba(100, 100, 100, 0.5);
+            cursor: not-allowed;
+        }
+
         #controls {
             width: 280px;
             background: #16213e;
@@ -253,6 +280,11 @@
             text-align: center;
             margin-top: 5px;
         }
+
+        .unit-label {
+            color: #666;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -261,6 +293,7 @@
             <div id="canvases">
                 <div class="view-panel" id="sequential-panel">
                     <div class="view-label sequential">Sequential (As Arrives)</div>
+                    <button class="repack-btn" id="repack-btn">Re-Pack (Optimize)</button>
                     <div class="view-stats">
                         <div class="stat-row">
                             <span>Packages:</span>
@@ -271,8 +304,8 @@
                             <span class="stat-value sequential" id="seq-efficiency">0%</span>
                         </div>
                         <div class="stat-row">
-                            <span>Max Height:</span>
-                            <span class="stat-value sequential" id="seq-height">0</span>
+                            <span>Height Used:</span>
+                            <span class="stat-value sequential" id="seq-height">0"</span>
                         </div>
                     </div>
                 </div>
@@ -288,8 +321,8 @@
                             <span class="stat-value optimized" id="opt-efficiency">0%</span>
                         </div>
                         <div class="stat-row">
-                            <span>Max Height:</span>
-                            <span class="stat-value optimized" id="opt-height">0</span>
+                            <span>Height Used:</span>
+                            <span class="stat-value optimized" id="opt-height">0"</span>
                         </div>
                     </div>
                 </div>
@@ -300,47 +333,41 @@
 
             <h2>Cart Dimensions</h2>
             <div class="control-group">
-                <label>Width: <span id="cart-width-val">2</span></label>
+                <label>Width: <span id="cart-width-val">12</span><span class="unit-label">"</span></label>
                 <select id="cart-width">
-                    <option value="1">1.00</option>
-                    <option value="1.33">1.33</option>
-                    <option value="1.5">1.50</option>
-                    <option value="1.66">1.66</option>
-                    <option value="2" selected>2.00</option>
-                    <option value="2.33">2.33</option>
-                    <option value="2.5">2.50</option>
-                    <option value="2.66">2.66</option>
-                    <option value="3">3.00</option>
-                    <option value="3.5">3.50</option>
-                    <option value="4">4.00</option>
+                    <option value="8">8"</option>
+                    <option value="10">10"</option>
+                    <option value="12" selected>12"</option>
+                    <option value="14">14"</option>
+                    <option value="16">16"</option>
+                    <option value="18">18"</option>
+                    <option value="20">20"</option>
+                    <option value="24">24"</option>
                 </select>
             </div>
             <div class="control-group">
-                <label>Depth: <span id="cart-depth-val">2</span></label>
+                <label>Depth: <span id="cart-depth-val">12</span><span class="unit-label">"</span></label>
                 <select id="cart-depth">
-                    <option value="1">1.00</option>
-                    <option value="1.33">1.33</option>
-                    <option value="1.5">1.50</option>
-                    <option value="1.66">1.66</option>
-                    <option value="2" selected>2.00</option>
-                    <option value="2.33">2.33</option>
-                    <option value="2.5">2.50</option>
-                    <option value="2.66">2.66</option>
-                    <option value="3">3.00</option>
-                    <option value="3.5">3.50</option>
-                    <option value="4">4.00</option>
+                    <option value="8">8"</option>
+                    <option value="10">10"</option>
+                    <option value="12" selected>12"</option>
+                    <option value="14">14"</option>
+                    <option value="16">16"</option>
+                    <option value="18">18"</option>
+                    <option value="20">20"</option>
+                    <option value="24">24"</option>
                 </select>
             </div>
             <div class="control-group">
-                <label>Height: <span id="cart-height-val">2.5</span></label>
+                <label>Height: <span id="cart-height-val">14</span><span class="unit-label">"</span></label>
                 <select id="cart-height">
-                    <option value="1.5">1.50</option>
-                    <option value="2">2.00</option>
-                    <option value="2.5" selected>2.50</option>
-                    <option value="3">3.00</option>
-                    <option value="3.5">3.50</option>
-                    <option value="4">4.00</option>
-                    <option value="5">5.00</option>
+                    <option value="10">10"</option>
+                    <option value="12">12"</option>
+                    <option value="14" selected>14"</option>
+                    <option value="16">16"</option>
+                    <option value="18">18"</option>
+                    <option value="20">20"</option>
+                    <option value="24">24"</option>
                 </select>
             </div>
 
@@ -381,9 +408,9 @@
                 <div class="comparison-row">
                     <span class="label">Height Used</span>
                     <div class="values">
-                        <span class="seq" id="sum-seq-height">0</span>
+                        <span class="seq" id="sum-seq-height">0"</span>
                         <span>vs</span>
-                        <span class="opt" id="sum-opt-height">0</span>
+                        <span class="opt" id="sum-opt-height">0"</span>
                     </div>
                 </div>
             </div>
@@ -400,21 +427,25 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
         // ==================== CONFIGURATION ====================
+        // Internal units: 1 unit = 1 inch (for display), scaled by SCALE for 3D rendering
+        const SCALE = 0.08; // 1 inch = 0.08 3D units (so 12" = ~1 unit in 3D)
+
         const CONFIG = {
-            cart: { width: 2, depth: 2, height: 2.5 },
+            cart: { width: 12, depth: 12, height: 14 }, // inches
             maxPackagesPerCart: 50,
+            // Package sizes in inches (typical small shipping boxes)
             packageTypes: [
-                { name: 'Small Box', w: 0.25, d: 0.25, h: 0.2, color: 0xf4a460 },
-                { name: 'Medium Box', w: 0.35, d: 0.3, h: 0.25, color: 0xdeb887 },
-                { name: 'Large Box', w: 0.45, d: 0.35, h: 0.3, color: 0xd2691e },
-                { name: 'Flat Box', w: 0.4, d: 0.4, h: 0.15, color: 0xcd853f },
-                { name: 'Tall Box', w: 0.25, d: 0.25, h: 0.45, color: 0xa0522d },
-                { name: 'Wide Box', w: 0.5, d: 0.25, h: 0.2, color: 0x8b4513 },
-                { name: 'Cube', w: 0.3, d: 0.3, h: 0.3, color: 0xbc8f8f },
-                { name: 'Long Box', w: 0.55, d: 0.2, h: 0.2, color: 0xf5deb3 }
+                { name: 'Small Box', w: 3, d: 3, h: 2, color: 0xf4a460 },
+                { name: 'Medium Box', w: 4, d: 3.5, h: 3, color: 0xdeb887 },
+                { name: 'Padded Envelope', w: 5, d: 4, h: 1.5, color: 0xcd853f },
+                { name: 'Cube Box', w: 3.5, d: 3.5, h: 3.5, color: 0xbc8f8f },
+                { name: 'Tall Box', w: 3, d: 3, h: 5, color: 0xa0522d },
+                { name: 'Wide Box', w: 6, d: 3, h: 2, color: 0x8b4513 },
+                { name: 'Book Mailer', w: 5, d: 4, h: 2, color: 0xd2691e },
+                { name: 'Long Box', w: 7, d: 2.5, h: 2.5, color: 0xf5deb3 }
             ],
-            conveyorSpeed: 2.5,
-            dropSpeed: 5
+            conveyorSpeed: 3,
+            dropSpeed: 6
         };
 
         // ==================== DUAL SCENE SETUP ====================
@@ -428,7 +459,7 @@
                 this.scene.background = new THREE.Color(0x1a1a2e);
 
                 this.camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
-                this.camera.position.set(5, 4, 5);
+                this.camera.position.set(3, 2.5, 3);
 
                 this.renderer = new THREE.WebGLRenderer({ antialias: true });
                 this.renderer.setSize(container.clientWidth, container.clientHeight);
@@ -437,7 +468,7 @@
 
                 this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
-                this.controls.target.set(0, 1.2, 0);
+                this.controls.target.set(0, 0.7, 0);
 
                 this.setupLights();
                 this.createGround();
@@ -455,55 +486,58 @@
                 this.scene.add(ambient);
 
                 const directional = new THREE.DirectionalLight(0xffffff, 0.8);
-                directional.position.set(5, 10, 5);
+                directional.position.set(3, 6, 3);
                 directional.castShadow = true;
                 directional.shadow.mapSize.width = 1024;
                 directional.shadow.mapSize.height = 1024;
                 this.scene.add(directional);
 
-                const accent = new THREE.PointLight(this.color, 0.4, 15);
-                accent.position.set(-3, 5, 3);
+                const accent = new THREE.PointLight(this.color, 0.4, 10);
+                accent.position.set(-2, 3, 2);
                 this.scene.add(accent);
             }
 
             createGround() {
                 const ground = new THREE.Mesh(
-                    new THREE.PlaneGeometry(20, 20),
+                    new THREE.PlaneGeometry(15, 15),
                     new THREE.MeshStandardMaterial({ color: 0x16213e, roughness: 0.8 })
                 );
                 ground.rotation.x = -Math.PI / 2;
                 ground.receiveShadow = true;
                 this.scene.add(ground);
 
-                const grid = new THREE.GridHelper(20, 20, 0x0f3460, 0x0f3460);
-                grid.position.y = 0.01;
+                const grid = new THREE.GridHelper(15, 30, 0x0f3460, 0x0f3460);
+                grid.position.y = 0.005;
                 this.scene.add(grid);
             }
 
             createConveyor() {
                 this.conveyor = new THREE.Group();
 
+                const beltWidth = 0.6;
+                const beltLength = 3;
+
                 const belt = new THREE.Mesh(
-                    new THREE.BoxGeometry(5, 0.2, 1),
+                    new THREE.BoxGeometry(beltLength, 0.12, beltWidth),
                     new THREE.MeshStandardMaterial({ color: 0x333333 })
                 );
-                belt.position.set(-1.5, 1.8, -2);
+                belt.position.set(-1, 1.1, -1.2);
                 belt.castShadow = true;
                 this.conveyor.add(belt);
 
                 const surface = new THREE.Mesh(
-                    new THREE.BoxGeometry(4.8, 0.08, 0.9),
+                    new THREE.BoxGeometry(beltLength - 0.1, 0.05, beltWidth - 0.1),
                     new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
                 );
-                surface.position.set(-1.5, 1.91, -2);
+                surface.position.set(-1, 1.17, -1.2);
                 this.conveyor.add(surface);
 
                 // Legs
-                const legGeo = new THREE.CylinderGeometry(0.06, 0.06, 1.7);
+                const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.05);
                 const legMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
-                [[-3.5, -2.4], [-3.5, -1.6], [0.5, -2.4], [0.5, -1.6]].forEach(([x, z]) => {
+                [[-2.3, -1.45], [-2.3, -0.95], [0.3, -1.45], [0.3, -0.95]].forEach(([x, z]) => {
                     const leg = new THREE.Mesh(legGeo, legMat);
-                    leg.position.set(x, 0.85, z);
+                    leg.position.set(x, 0.525, z);
                     this.conveyor.add(leg);
                 });
 
@@ -516,14 +550,16 @@
                 }
 
                 this.cart = new THREE.Group();
-                const { width, depth, height } = CONFIG.cart;
+                const w = CONFIG.cart.width * SCALE;
+                const d = CONFIG.cart.depth * SCALE;
+                const h = CONFIG.cart.height * SCALE;
 
                 // Base
                 const base = new THREE.Mesh(
-                    new THREE.BoxGeometry(width + 0.1, 0.1, depth + 0.1),
+                    new THREE.BoxGeometry(w + 0.05, 0.06, d + 0.05),
                     new THREE.MeshStandardMaterial({ color: 0x4a4a4a })
                 );
-                base.position.y = 0.35;
+                base.position.y = 0.22;
                 base.castShadow = true;
                 this.cart.add(base);
 
@@ -536,40 +572,41 @@
                 });
 
                 const walls = [
-                    { pos: [0, 0.35 + height/2, -depth/2], rot: [0, 0, 0], size: [width, height] },
-                    { pos: [0, 0.35 + height/2, depth/2], rot: [0, Math.PI, 0], size: [width, height] },
-                    { pos: [-width/2, 0.35 + height/2, 0], rot: [0, Math.PI/2, 0], size: [depth, height] },
-                    { pos: [width/2, 0.35 + height/2, 0], rot: [0, -Math.PI/2, 0], size: [depth, height] }
+                    { pos: [0, 0.22 + h/2, -d/2], rot: [0, 0, 0], size: [w, h] },
+                    { pos: [0, 0.22 + h/2, d/2], rot: [0, Math.PI, 0], size: [w, h] },
+                    { pos: [-w/2, 0.22 + h/2, 0], rot: [0, Math.PI/2, 0], size: [d, h] },
+                    { pos: [w/2, 0.22 + h/2, 0], rot: [0, -Math.PI/2, 0], size: [d, h] }
                 ];
 
-                walls.forEach(w => {
-                    const wall = new THREE.Mesh(new THREE.PlaneGeometry(...w.size), wallMat);
-                    wall.position.set(...w.pos);
-                    wall.rotation.set(...w.rot);
-                    this.cart.add(wall);
+                walls.forEach(wall => {
+                    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(...wall.size), wallMat);
+                    mesh.position.set(...wall.pos);
+                    mesh.rotation.set(...wall.rot);
+                    this.cart.add(mesh);
                 });
 
                 // Edge frame
                 const edges = new THREE.LineSegments(
-                    new THREE.EdgesGeometry(new THREE.BoxGeometry(width, height, depth)),
+                    new THREE.EdgesGeometry(new THREE.BoxGeometry(w, h, d)),
                     new THREE.LineBasicMaterial({ color: this.color })
                 );
-                edges.position.y = 0.35 + height/2;
+                edges.position.y = 0.22 + h/2;
                 this.cart.add(edges);
 
                 // Wheels
-                const wheelGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 12);
+                const wheelGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.06, 12);
                 const wheelMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+                const offset = 0.12;
                 const wheelPositions = [
-                    [-width/2 + 0.2, -depth/2 + 0.2],
-                    [width/2 - 0.2, -depth/2 + 0.2],
-                    [-width/2 + 0.2, depth/2 - 0.2],
-                    [width/2 - 0.2, depth/2 - 0.2]
+                    [-w/2 + offset, -d/2 + offset],
+                    [w/2 - offset, -d/2 + offset],
+                    [-w/2 + offset, d/2 - offset],
+                    [w/2 - offset, d/2 - offset]
                 ];
                 wheelPositions.forEach(([x, z]) => {
                     const wheel = new THREE.Mesh(wheelGeo, wheelMat);
                     wheel.rotation.z = Math.PI / 2;
-                    wheel.position.set(x, 0.12, z);
+                    wheel.position.set(x, 0.07, z);
                     this.cart.add(wheel);
                 });
 
@@ -581,9 +618,9 @@
 
                 // Use seed for consistent random variation between scenes
                 const variation = 0.9 + (seed % 100) / 500;
-                const w = type.w * variation;
-                const d = type.d * variation;
-                const h = type.h * variation;
+                const w = type.w * variation * SCALE;
+                const d = type.d * variation * SCALE;
+                const h = type.h * variation * SCALE;
 
                 const mesh = new THREE.Mesh(
                     new THREE.BoxGeometry(w, h, d),
@@ -593,18 +630,29 @@
 
                 // Tape
                 const tape = new THREE.Mesh(
-                    new THREE.BoxGeometry(w * 0.15, h + 0.005, d + 0.005),
+                    new THREE.BoxGeometry(w * 0.15, h + 0.003, d + 0.003),
                     new THREE.MeshStandardMaterial({ color: 0xd4a76a })
                 );
                 mesh.add(tape);
 
-                mesh.userData = { width: w, depth: d, height: h, volume: w * d * h, type: type.name };
+                // Store dimensions in inches for display, scaled for collision
+                mesh.userData = {
+                    width: w,
+                    depth: d,
+                    height: h,
+                    widthInches: type.w * variation,
+                    depthInches: type.d * variation,
+                    heightInches: type.h * variation,
+                    volume: w * d * h,
+                    volumeInches: (type.w * variation) * (type.d * variation) * (type.h * variation),
+                    type: type.name
+                };
                 return mesh;
             }
 
             spawnPackage(typeIndex, seed) {
                 const pkg = this.createPackage(typeIndex, seed);
-                pkg.position.set(-4, 2, -2);
+                pkg.position.set(-2.5, 1.25, -1.2);
                 this.scene.add(pkg);
                 this.packages.push(pkg);
 
@@ -613,7 +661,7 @@
                     this.animatingPackages.push({
                         mesh: pkg,
                         state: 'conveyor',
-                        targetX: 0.8,
+                        targetX: 0.5,
                         velocity: new THREE.Vector3(0, 0, 0),
                         waitForBatch: true
                     });
@@ -621,25 +669,27 @@
                     this.animatingPackages.push({
                         mesh: pkg,
                         state: 'conveyor',
-                        targetX: 0.8,
+                        targetX: 0.5,
                         velocity: new THREE.Vector3(0, 0, 0)
                     });
                 }
             }
 
             findPlacementPosition(pkg, existingPackages = this.packagesInCart) {
-                const { width, depth, height } = CONFIG.cart;
+                const w = CONFIG.cart.width * SCALE;
+                const d = CONFIG.cart.depth * SCALE;
+                const h = CONFIG.cart.height * SCALE;
                 const pkgW = pkg.userData.currentWidth || pkg.userData.width;
                 const pkgD = pkg.userData.currentDepth || pkg.userData.depth;
                 const pkgH = pkg.userData.height;
 
-                const gridStep = 0.08;
+                const gridStep = 0.04;
                 let bestPosition = null;
                 let lowestY = Infinity;
 
-                for (let x = -width/2 + pkgW/2; x <= width/2 - pkgW/2; x += gridStep) {
-                    for (let z = -depth/2 + pkgD/2; z <= depth/2 - pkgD/2; z += gridStep) {
-                        let y = 0.4;
+                for (let x = -w/2 + pkgW/2; x <= w/2 - pkgW/2; x += gridStep) {
+                    for (let z = -d/2 + pkgD/2; z <= d/2 - pkgD/2; z += gridStep) {
+                        let y = 0.25;
 
                         for (const placed of existingPackages) {
                             const pW = placed.userData.currentWidth || placed.userData.width;
@@ -651,7 +701,7 @@
                         }
 
                         const finalY = y + pkgH / 2;
-                        if (finalY + pkgH / 2 <= 0.35 + height + 0.3 && finalY < lowestY) {
+                        if (finalY + pkgH / 2 <= 0.22 + h + 0.1 && finalY < lowestY) {
                             lowestY = finalY;
                             bestPosition = new THREE.Vector3(x, finalY, z);
                         }
@@ -661,19 +711,21 @@
                 if (!bestPosition) {
                     const maxY = existingPackages.length > 0
                         ? Math.max(...existingPackages.map(p => p.position.y + p.userData.height / 2))
-                        : 0.4;
+                        : 0.25;
                     bestPosition = new THREE.Vector3(0, maxY + pkgH / 2, 0);
                 }
 
                 return bestPosition;
             }
 
-            findOptimizedPlacements() {
-                const { width, depth, height } = CONFIG.cart;
-                const sorted = [...this.pendingPackages].sort((a, b) => b.userData.volume - a.userData.volume);
+            findOptimizedPlacements(packagesToPlace = this.pendingPackages) {
+                const w = CONFIG.cart.width * SCALE;
+                const d = CONFIG.cart.depth * SCALE;
+                const h = CONFIG.cart.height * SCALE;
+                const sorted = [...packagesToPlace].sort((a, b) => b.userData.volume - a.userData.volume);
 
                 const placements = [];
-                const virtualPlaced = [...this.packagesInCart];
+                const virtualPlaced = [...this.packagesInCart.filter(p => !packagesToPlace.includes(p))];
 
                 for (const pkg of sorted) {
                     const pkgW = pkg.userData.width;
@@ -691,35 +743,35 @@
                         { w: pkgD, d: pkgW, rot: Math.PI / 2 }
                     ];
 
-                    for (const { w, d, rot } of rotations) {
-                        const gridStep = 0.05;
+                    for (const { w: rw, d: rd, rot } of rotations) {
+                        const gridStep = 0.025;
 
-                        for (let x = -width/2 + w/2; x <= width/2 - w/2; x += gridStep) {
-                            for (let z = -depth/2 + d/2; z <= depth/2 - d/2; z += gridStep) {
-                                let y = 0.4;
+                        for (let x = -w/2 + rw/2; x <= w/2 - rw/2; x += gridStep) {
+                            for (let z = -d/2 + rd/2; z <= d/2 - rd/2; z += gridStep) {
+                                let y = 0.25;
 
                                 for (const placed of virtualPlaced) {
                                     const pW = placed.userData.currentWidth || placed.userData.width;
                                     const pD = placed.userData.currentDepth || placed.userData.depth;
 
-                                    if (this.boxesOverlap2D(x, z, w, d, placed.position.x, placed.position.z, pW, pD)) {
+                                    if (this.boxesOverlap2D(x, z, rw, rd, placed.position.x, placed.position.z, pW, pD)) {
                                         y = Math.max(y, placed.position.y + placed.userData.height / 2);
                                     }
                                 }
 
                                 const finalY = y + pkgH / 2;
 
-                                if (finalY + pkgH / 2 <= 0.35 + height + 0.3) {
-                                    const cornerBonus = (Math.abs(x) + Math.abs(z)) * 0.15;
-                                    const heightPenalty = finalY * 2.5;
+                                if (finalY + pkgH / 2 <= 0.22 + h + 0.1) {
+                                    const cornerBonus = (Math.abs(x) + Math.abs(z)) * 0.2;
+                                    const heightPenalty = finalY * 3;
                                     const score = cornerBonus - heightPenalty;
 
-                                    if (finalY < lowestY || (Math.abs(finalY - lowestY) < 0.01 && score > bestScore)) {
+                                    if (finalY < lowestY || (Math.abs(finalY - lowestY) < 0.005 && score > bestScore)) {
                                         lowestY = finalY;
                                         bestScore = score;
                                         bestPosition = new THREE.Vector3(x, finalY, z);
                                         bestRotation = rot;
-                                        bestDims = { w, d };
+                                        bestDims = { w: rw, d: rd };
                                     }
                                 }
                             }
@@ -745,8 +797,8 @@
             }
 
             boxesOverlap2D(x1, z1, w1, d1, x2, z2, w2, d2) {
-                return Math.abs(x1 - x2) < (w1 + w2) / 2 - 0.005 &&
-                       Math.abs(z1 - z2) < (d1 + d2) / 2 - 0.005;
+                return Math.abs(x1 - x2) < (w1 + w2) / 2 - 0.003 &&
+                       Math.abs(z1 - z2) < (d1 + d2) / 2 - 0.003;
             }
 
             placePackage(pkg, position, rotation = 0) {
@@ -759,7 +811,9 @@
                     pkg.userData.currentWidth = pkg.userData.width;
                     pkg.userData.currentDepth = pkg.userData.depth;
                 }
-                this.packagesInCart.push(pkg);
+                if (!this.packagesInCart.includes(pkg)) {
+                    this.packagesInCart.push(pkg);
+                }
             }
 
             processBatch() {
@@ -780,14 +834,39 @@
                 this.pendingPackages = [];
             }
 
+            repackAll() {
+                if (this.packagesInCart.length === 0) return;
+
+                // Get all packages currently in cart
+                const allPackages = [...this.packagesInCart];
+
+                // Find optimized placements for all
+                const placements = this.findOptimizedPlacements(allPackages);
+
+                // Animate packages to new positions
+                placements.forEach(({ pkg, pos, rotation }) => {
+                    // Remove from packagesInCart temporarily
+                    const idx = this.packagesInCart.indexOf(pkg);
+                    if (idx > -1) this.packagesInCart.splice(idx, 1);
+
+                    this.animatingPackages.push({
+                        mesh: pkg,
+                        state: 'dropping',
+                        targetPosition: pos,
+                        rotation: rotation,
+                        velocity: new THREE.Vector3(0, 0, 0)
+                    });
+                });
+            }
+
             update(speedMultiplier) {
                 for (let i = this.animatingPackages.length - 1; i >= 0; i--) {
                     const anim = this.animatingPackages[i];
                     const pkg = anim.mesh;
 
                     if (anim.state === 'conveyor') {
-                        pkg.position.x += CONFIG.conveyorSpeed * 0.016 * speedMultiplier;
-                        pkg.position.y = 2 + Math.sin(Date.now() * 0.008) * 0.015;
+                        pkg.position.x += CONFIG.conveyorSpeed * 0.016 * speedMultiplier * SCALE;
+                        pkg.position.y = 1.25 + Math.sin(Date.now() * 0.008) * 0.01;
 
                         if (pkg.position.x >= anim.targetX) {
                             if (anim.waitForBatch) {
@@ -816,10 +895,10 @@
                         pkg.position.x += (target.x - pkg.position.x) * speed;
                         pkg.position.z += (target.z - pkg.position.z) * speed;
 
-                        anim.velocity.y -= 0.012 * speedMultiplier;
+                        anim.velocity.y -= 0.008 * speedMultiplier;
                         pkg.position.y += anim.velocity.y;
 
-                        if (pkg.position.y <= target.y || pkg.position.distanceTo(target) < 0.05) {
+                        if (pkg.position.y <= target.y || pkg.position.distanceTo(target) < 0.03) {
                             this.placePackage(pkg, target, anim.rotation || 0);
                             this.animatingPackages.splice(i, 1);
                         }
@@ -842,15 +921,18 @@
 
             getStats() {
                 const count = this.packagesInCart.length;
-                if (count === 0) return { count: 0, efficiency: 0, maxHeight: 0 };
+                if (count === 0) return { count: 0, efficiency: 0, maxHeight: 0, maxHeightInches: 0 };
 
                 const totalVolume = this.packagesInCart.reduce((sum, p) => sum + p.userData.volume, 0);
                 const maxY = Math.max(...this.packagesInCart.map(p => p.position.y + p.userData.height / 2));
-                const usedHeight = maxY - 0.35;
-                const usedVolume = CONFIG.cart.width * CONFIG.cart.depth * usedHeight;
+                const usedHeight = maxY - 0.22;
+                const usedHeightInches = usedHeight / SCALE;
+                const cartW = CONFIG.cart.width * SCALE;
+                const cartD = CONFIG.cart.depth * SCALE;
+                const usedVolume = cartW * cartD * usedHeight;
                 const efficiency = usedVolume > 0 ? (totalVolume / usedVolume) * 100 : 0;
 
-                return { count, efficiency, maxHeight: usedHeight };
+                return { count, efficiency, maxHeight: usedHeight, maxHeightInches: usedHeightInches };
             }
 
             reset() {
@@ -871,7 +953,7 @@
         let spawnTimer = 0;
         let packageSeed = 0;
         let cartNumber = 1;
-        const SPAWN_INTERVAL = 1500;
+        const SPAWN_INTERVAL = 1200;
 
         function init() {
             const seqPanel = document.getElementById('sequential-panel');
@@ -912,24 +994,28 @@
 
             document.getElementById('seq-count').textContent = seqStats.count;
             document.getElementById('seq-efficiency').textContent = seqStats.efficiency.toFixed(1) + '%';
-            document.getElementById('seq-height').textContent = seqStats.maxHeight.toFixed(2);
+            document.getElementById('seq-height').textContent = seqStats.maxHeightInches.toFixed(1) + '"';
 
             document.getElementById('opt-count').textContent = optStats.count;
             document.getElementById('opt-efficiency').textContent = optStats.efficiency.toFixed(1) + '%';
-            document.getElementById('opt-height').textContent = optStats.maxHeight.toFixed(2);
+            document.getElementById('opt-height').textContent = optStats.maxHeightInches.toFixed(1) + '"';
 
             document.getElementById('sum-seq-count').textContent = seqStats.count;
             document.getElementById('sum-opt-count').textContent = optStats.count;
             document.getElementById('sum-seq-eff').textContent = seqStats.efficiency.toFixed(1) + '%';
             document.getElementById('sum-opt-eff').textContent = optStats.efficiency.toFixed(1) + '%';
-            document.getElementById('sum-seq-height').textContent = seqStats.maxHeight.toFixed(2);
-            document.getElementById('sum-opt-height').textContent = optStats.maxHeight.toFixed(2);
+            document.getElementById('sum-seq-height').textContent = seqStats.maxHeightInches.toFixed(1) + '"';
+            document.getElementById('sum-opt-height').textContent = optStats.maxHeightInches.toFixed(1) + '"';
 
             // Highlight winner
             const seqEffEl = document.getElementById('sum-seq-eff');
             const optEffEl = document.getElementById('sum-opt-eff');
             seqEffEl.classList.toggle('winner', seqStats.efficiency > optStats.efficiency);
             optEffEl.classList.toggle('winner', optStats.efficiency > seqStats.efficiency);
+
+            // Update repack button state
+            const repackBtn = document.getElementById('repack-btn');
+            repackBtn.disabled = seqStats.count === 0 || seqScene.animatingPackages.length > 0;
         }
 
         function animate() {
@@ -948,9 +1034,13 @@
 
                 seqScene.update(speedMultiplier);
                 optScene.update(speedMultiplier);
-                updateStats();
+            } else {
+                // Still update animations when paused (for repack)
+                seqScene.update(speedMultiplier);
+                optScene.update(speedMultiplier);
             }
 
+            updateStats();
             seqScene.render();
             optScene.render();
         }
@@ -1002,6 +1092,13 @@
                             spawnPackages();
                         }
                     }, i * 80);
+                }
+            });
+
+            // Repack button
+            document.getElementById('repack-btn').addEventListener('click', () => {
+                if (seqScene.packagesInCart.length > 0 && seqScene.animatingPackages.length === 0) {
+                    seqScene.repackAll();
                 }
             });
         }
