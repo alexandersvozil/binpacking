@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bin Packing Visualizer</title>
+    <title>Bin Packing Visualizer - Side by Side Comparison</title>
     <style>
         * {
             margin: 0;
@@ -23,67 +23,146 @@
             height: 100vh;
         }
 
-        #canvas-container {
+        #views-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #canvases {
+            flex: 1;
+            display: flex;
+            gap: 4px;
+            padding: 4px;
+            background: #0f0f1a;
+        }
+
+        .view-panel {
             flex: 1;
             position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .view-panel canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .view-label {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.95em;
+            z-index: 10;
+            text-align: center;
+        }
+
+        .view-label.sequential {
+            background: rgba(233, 69, 96, 0.9);
+            color: white;
+        }
+
+        .view-label.optimized {
+            background: rgba(15, 155, 142, 0.9);
+            color: white;
+        }
+
+        .view-stats {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            background: rgba(22, 33, 62, 0.95);
+            padding: 12px;
+            border-radius: 8px;
+            color: #e8e8e8;
+            font-size: 0.8em;
+        }
+
+        .view-stats .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+        }
+
+        .view-stats .stat-value {
+            font-weight: bold;
+        }
+
+        .view-stats .stat-value.sequential {
+            color: #e94560;
+        }
+
+        .view-stats .stat-value.optimized {
+            color: #0f9b8e;
         }
 
         #controls {
-            width: 320px;
+            width: 280px;
             background: #16213e;
-            padding: 20px;
+            padding: 15px;
             overflow-y: auto;
             color: #e8e8e8;
             border-left: 2px solid #0f3460;
         }
 
         h1 {
-            font-size: 1.4em;
-            margin-bottom: 20px;
+            font-size: 1.2em;
+            margin-bottom: 15px;
             color: #e94560;
             text-align: center;
         }
 
         h2 {
-            font-size: 1.1em;
-            margin: 20px 0 10px;
+            font-size: 0.95em;
+            margin: 15px 0 8px;
             color: #0f9b8e;
             border-bottom: 1px solid #0f3460;
-            padding-bottom: 5px;
+            padding-bottom: 4px;
         }
 
         .control-group {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         label {
             display: block;
-            margin-bottom: 5px;
-            font-size: 0.9em;
+            margin-bottom: 4px;
+            font-size: 0.85em;
             color: #a8a8a8;
         }
 
-        input[type="number"], input[type="range"] {
+        select, input[type="range"] {
             width: 100%;
-            padding: 8px;
+            padding: 6px;
             border: 1px solid #0f3460;
             border-radius: 4px;
             background: #1a1a2e;
             color: #e8e8e8;
         }
 
+        select {
+            cursor: pointer;
+        }
+
         input[type="range"] {
             padding: 0;
+            cursor: pointer;
         }
 
         button {
             width: 100%;
-            padding: 12px;
-            margin: 5px 0;
+            padding: 10px;
+            margin: 4px 0;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.95em;
+            font-size: 0.9em;
             font-weight: 600;
             transition: all 0.3s;
         }
@@ -106,188 +185,214 @@
             background: #1a4b8c;
         }
 
-        .stats-box {
+        .btn-row {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-row button {
+            flex: 1;
+        }
+
+        .comparison-summary {
             background: #1a1a2e;
             border: 1px solid #0f3460;
             border-radius: 8px;
-            padding: 15px;
+            padding: 12px;
             margin: 10px 0;
         }
 
-        .stats-box h3 {
-            font-size: 0.85em;
-            color: #0f9b8e;
-            margin-bottom: 10px;
+        .comparison-summary h3 {
+            font-size: 0.8em;
+            color: #888;
+            margin-bottom: 8px;
+            text-align: center;
         }
 
-        .stat-row {
+        .comparison-row {
             display: flex;
             justify-content: space-between;
-            margin: 5px 0;
+            align-items: center;
+            margin: 6px 0;
             font-size: 0.85em;
         }
 
-        .stat-value {
-            color: #e94560;
-            font-weight: bold;
+        .comparison-row .label {
+            color: #888;
         }
 
-        .comparison {
+        .comparison-row .values {
             display: flex;
             gap: 10px;
         }
 
-        .comparison .stats-box {
-            flex: 1;
-        }
-
-        .mode-indicator {
-            text-align: center;
-            padding: 10px;
-            border-radius: 6px;
-            margin: 10px 0;
+        .comparison-row .seq {
+            color: #e94560;
             font-weight: bold;
         }
 
-        .mode-sequential {
-            background: rgba(233, 69, 96, 0.2);
-            color: #e94560;
-        }
-
-        .mode-optimized {
-            background: rgba(15, 155, 142, 0.2);
+        .comparison-row .opt {
             color: #0f9b8e;
+            font-weight: bold;
         }
 
-        #snapshot-gallery {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 10px;
-        }
-
-        .snapshot-thumb {
-            width: 60px;
-            height: 45px;
-            border: 2px solid #0f3460;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: border-color 0.3s;
-        }
-
-        .snapshot-thumb:hover {
-            border-color: #e94560;
-        }
-
-        .snapshot-thumb.active {
-            border-color: #0f9b8e;
-        }
-
-        #info-overlay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(22, 33, 62, 0.9);
-            padding: 15px;
-            border-radius: 8px;
-            color: #e8e8e8;
-            font-size: 0.85em;
-            min-width: 200px;
+        .winner {
+            text-decoration: underline;
         }
 
         .speed-display {
             text-align: center;
             color: #a8a8a8;
-            font-size: 0.85em;
+            font-size: 0.8em;
+            margin-top: 3px;
+        }
+
+        .info-text {
+            font-size: 0.75em;
+            color: #666;
+            text-align: center;
             margin-top: 5px;
         }
     </style>
 </head>
 <body>
     <div id="container">
-        <div id="canvas-container">
-            <div id="info-overlay">
-                <div class="stat-row">
-                    <span>Packages in Cart:</span>
-                    <span class="stat-value" id="package-count">0</span>
+        <div id="views-container">
+            <div id="canvases">
+                <div class="view-panel" id="sequential-panel">
+                    <div class="view-label sequential">Sequential (As Arrives)</div>
+                    <div class="view-stats">
+                        <div class="stat-row">
+                            <span>Packages:</span>
+                            <span class="stat-value sequential" id="seq-count">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Efficiency:</span>
+                            <span class="stat-value sequential" id="seq-efficiency">0%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Max Height:</span>
+                            <span class="stat-value sequential" id="seq-height">0</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-row">
-                    <span>Cart #:</span>
-                    <span class="stat-value" id="cart-number">1</span>
-                </div>
-                <div class="stat-row">
-                    <span>Total Packages:</span>
-                    <span class="stat-value" id="total-packages">0</span>
-                </div>
-                <div class="stat-row">
-                    <span>Volume Used:</span>
-                    <span class="stat-value" id="volume-used">0%</span>
+                <div class="view-panel" id="optimized-panel">
+                    <div class="view-label optimized">Optimized (Batch/10)</div>
+                    <div class="view-stats">
+                        <div class="stat-row">
+                            <span>Packages:</span>
+                            <span class="stat-value optimized" id="opt-count">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Efficiency:</span>
+                            <span class="stat-value optimized" id="opt-efficiency">0%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Max Height:</span>
+                            <span class="stat-value optimized" id="opt-height">0</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <div id="controls">
-            <h1>📦 Bin Packing Visualizer</h1>
+            <h1>📦 Bin Packing Comparison</h1>
 
             <h2>Cart Dimensions</h2>
             <div class="control-group">
-                <label>Width: <span id="cart-width-val">4</span></label>
-                <input type="range" id="cart-width" min="2" max="8" value="4" step="0.5">
+                <label>Width: <span id="cart-width-val">2</span></label>
+                <select id="cart-width">
+                    <option value="1">1.00</option>
+                    <option value="1.33">1.33</option>
+                    <option value="1.5">1.50</option>
+                    <option value="1.66">1.66</option>
+                    <option value="2" selected>2.00</option>
+                    <option value="2.33">2.33</option>
+                    <option value="2.5">2.50</option>
+                    <option value="2.66">2.66</option>
+                    <option value="3">3.00</option>
+                    <option value="3.5">3.50</option>
+                    <option value="4">4.00</option>
+                </select>
             </div>
             <div class="control-group">
-                <label>Depth: <span id="cart-depth-val">4</span></label>
-                <input type="range" id="cart-depth" min="2" max="8" value="4" step="0.5">
+                <label>Depth: <span id="cart-depth-val">2</span></label>
+                <select id="cart-depth">
+                    <option value="1">1.00</option>
+                    <option value="1.33">1.33</option>
+                    <option value="1.5">1.50</option>
+                    <option value="1.66">1.66</option>
+                    <option value="2" selected>2.00</option>
+                    <option value="2.33">2.33</option>
+                    <option value="2.5">2.50</option>
+                    <option value="2.66">2.66</option>
+                    <option value="3">3.00</option>
+                    <option value="3.5">3.50</option>
+                    <option value="4">4.00</option>
+                </select>
             </div>
             <div class="control-group">
-                <label>Height: <span id="cart-height-val">5</span></label>
-                <input type="range" id="cart-height" min="2" max="10" value="5" step="0.5">
+                <label>Height: <span id="cart-height-val">2.5</span></label>
+                <select id="cart-height">
+                    <option value="1.5">1.50</option>
+                    <option value="2">2.00</option>
+                    <option value="2.5" selected>2.50</option>
+                    <option value="3">3.00</option>
+                    <option value="3.5">3.50</option>
+                    <option value="4">4.00</option>
+                    <option value="5">5.00</option>
+                </select>
             </div>
 
-            <h2>Simulation Speed</h2>
+            <h2>Simulation</h2>
             <div class="control-group">
-                <input type="range" id="speed" min="0.5" max="5" value="1" step="0.5">
-                <div class="speed-display"><span id="speed-val">1</span>x speed</div>
+                <label>Speed</label>
+                <input type="range" id="speed" min="0.5" max="5" value="2" step="0.5">
+                <div class="speed-display"><span id="speed-val">2</span>x</div>
             </div>
 
-            <h2>Packing Mode</h2>
-            <div class="mode-indicator mode-sequential" id="mode-display">
-                Sequential Arrival (Tetris)
+            <div class="btn-row">
+                <button class="btn-primary" id="start-btn">Start</button>
+                <button class="btn-secondary" id="pause-btn">Pause</button>
             </div>
-            <button class="btn-secondary" id="toggle-mode">Switch to Optimized Mode</button>
-
-            <h2>Controls</h2>
-            <button class="btn-primary" id="start-btn">Start Simulation</button>
-            <button class="btn-secondary" id="pause-btn">Pause</button>
             <button class="btn-secondary" id="reset-btn">Reset</button>
-            <button class="btn-secondary" id="add-10-btn">Add 10 Packages</button>
+            <button class="btn-secondary" id="add-10-btn">+ Add 10 Packages</button>
+            <p class="info-text">Both carts receive identical packages</p>
 
-            <h2>Statistics Comparison</h2>
-            <div class="comparison">
-                <div class="stats-box">
-                    <h3>Sequential</h3>
-                    <div class="stat-row">
-                        <span>Efficiency:</span>
-                        <span class="stat-value" id="seq-efficiency">0%</span>
-                    </div>
-                    <div class="stat-row">
-                        <span>Height:</span>
-                        <span class="stat-value" id="seq-height">0</span>
+            <h2>Comparison Summary</h2>
+            <div class="comparison-summary">
+                <h3>Cart #<span id="cart-number">1</span></h3>
+                <div class="comparison-row">
+                    <span class="label">Packages</span>
+                    <div class="values">
+                        <span class="seq" id="sum-seq-count">0</span>
+                        <span>vs</span>
+                        <span class="opt" id="sum-opt-count">0</span>
                     </div>
                 </div>
-                <div class="stats-box">
-                    <h3>Optimized</h3>
-                    <div class="stat-row">
-                        <span>Efficiency:</span>
-                        <span class="stat-value" id="opt-efficiency">0%</span>
+                <div class="comparison-row">
+                    <span class="label">Efficiency</span>
+                    <div class="values">
+                        <span class="seq" id="sum-seq-eff">0%</span>
+                        <span>vs</span>
+                        <span class="opt" id="sum-opt-eff">0%</span>
                     </div>
-                    <div class="stat-row">
-                        <span>Height:</span>
-                        <span class="stat-value" id="opt-height">0</span>
+                </div>
+                <div class="comparison-row">
+                    <span class="label">Height Used</span>
+                    <div class="values">
+                        <span class="seq" id="sum-seq-height">0</span>
+                        <span>vs</span>
+                        <span class="opt" id="sum-opt-height">0</span>
                     </div>
                 </div>
             </div>
 
-            <h2>Snapshots (every 10 packages)</h2>
-            <div id="snapshot-gallery"></div>
+            <h2>Legend</h2>
+            <div style="font-size: 0.8em; color: #888;">
+                <p><span style="color: #e94560;">■</span> Sequential: Place each package as it arrives using greedy lowest-position</p>
+                <p style="margin-top: 5px;"><span style="color: #0f9b8e;">■</span> Optimized: Collect 10 packages, then use First-Fit-Decreasing algorithm</p>
+            </div>
         </div>
     </div>
 
@@ -296,777 +401,578 @@
     <script>
         // ==================== CONFIGURATION ====================
         const CONFIG = {
-            cart: { width: 4, depth: 4, height: 5 },
+            cart: { width: 2, depth: 2, height: 2.5 },
             maxPackagesPerCart: 50,
             packageTypes: [
-                { name: 'Small Box', w: 0.4, d: 0.4, h: 0.3, color: 0xf4a460 },
-                { name: 'Medium Box', w: 0.6, d: 0.5, h: 0.4, color: 0xdeb887 },
-                { name: 'Large Box', w: 0.8, d: 0.6, h: 0.5, color: 0xd2691e },
-                { name: 'Flat Box', w: 0.7, d: 0.7, h: 0.2, color: 0xcd853f },
-                { name: 'Tall Box', w: 0.4, d: 0.4, h: 0.7, color: 0xa0522d },
-                { name: 'Wide Box', w: 0.9, d: 0.4, h: 0.3, color: 0x8b4513 },
-                { name: 'Cube', w: 0.5, d: 0.5, h: 0.5, color: 0xbc8f8f },
-                { name: 'Long Box', w: 1.0, d: 0.3, h: 0.3, color: 0xf5deb3 }
+                { name: 'Small Box', w: 0.25, d: 0.25, h: 0.2, color: 0xf4a460 },
+                { name: 'Medium Box', w: 0.35, d: 0.3, h: 0.25, color: 0xdeb887 },
+                { name: 'Large Box', w: 0.45, d: 0.35, h: 0.3, color: 0xd2691e },
+                { name: 'Flat Box', w: 0.4, d: 0.4, h: 0.15, color: 0xcd853f },
+                { name: 'Tall Box', w: 0.25, d: 0.25, h: 0.45, color: 0xa0522d },
+                { name: 'Wide Box', w: 0.5, d: 0.25, h: 0.2, color: 0x8b4513 },
+                { name: 'Cube', w: 0.3, d: 0.3, h: 0.3, color: 0xbc8f8f },
+                { name: 'Long Box', w: 0.55, d: 0.2, h: 0.2, color: 0xf5deb3 }
             ],
-            conveyorSpeed: 2,
-            dropSpeed: 4
+            conveyorSpeed: 2.5,
+            dropSpeed: 5
         };
 
-        // ==================== THREE.JS SETUP ====================
-        let scene, camera, renderer, controls;
-        let conveyor, cart, cartBase;
-        let packages = [];
-        let packagesInCart = [];
-        let animatingPackages = [];
-        let isRunning = false;
-        let isPaused = false;
-        let speedMultiplier = 1;
-        let packingMode = 'sequential'; // 'sequential' or 'optimized'
-        let cartNumber = 1;
-        let totalPackages = 0;
-        let sequentialStats = { efficiency: 0, maxHeight: 0 };
-        let optimizedStats = { efficiency: 0, maxHeight: 0 };
-        let snapshots = [];
-        let pendingPackages = []; // For optimized mode batching
+        // ==================== DUAL SCENE SETUP ====================
+        class PackingScene {
+            constructor(container, mode, color) {
+                this.mode = mode;
+                this.color = color;
+                this.container = container;
 
-        function init() {
-            // Scene
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a2e);
-            scene.fog = new THREE.Fog(0x1a1a2e, 15, 30);
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x1a1a2e);
 
-            // Camera
-            const container = document.getElementById('canvas-container');
-            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(8, 8, 8);
+                this.camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+                this.camera.position.set(5, 4, 5);
 
-            // Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            container.appendChild(renderer.domElement);
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(container.clientWidth, container.clientHeight);
+                this.renderer.shadowMap.enabled = true;
+                container.appendChild(this.renderer.domElement);
 
-            // Controls
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.target.set(0, 2, 0);
+                this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+                this.controls.target.set(0, 1.2, 0);
 
-            // Lights
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
-            scene.add(ambientLight);
+                this.setupLights();
+                this.createGround();
+                this.createConveyor();
+                this.createCart();
 
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(10, 15, 10);
-            directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 2048;
-            directionalLight.shadow.mapSize.height = 2048;
-            directionalLight.shadow.camera.near = 0.5;
-            directionalLight.shadow.camera.far = 50;
-            directionalLight.shadow.camera.left = -15;
-            directionalLight.shadow.camera.right = 15;
-            directionalLight.shadow.camera.top = 15;
-            directionalLight.shadow.camera.bottom = -15;
-            scene.add(directionalLight);
-
-            const pointLight = new THREE.PointLight(0xe94560, 0.5, 20);
-            pointLight.position.set(-5, 8, 5);
-            scene.add(pointLight);
-
-            // Ground
-            const groundGeometry = new THREE.PlaneGeometry(30, 30);
-            const groundMaterial = new THREE.MeshStandardMaterial({
-                color: 0x16213e,
-                roughness: 0.8
-            });
-            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-            ground.rotation.x = -Math.PI / 2;
-            ground.receiveShadow = true;
-            scene.add(ground);
-
-            // Grid helper
-            const gridHelper = new THREE.GridHelper(30, 30, 0x0f3460, 0x0f3460);
-            gridHelper.position.y = 0.01;
-            scene.add(gridHelper);
-
-            createConveyor();
-            createCart();
-
-            // Handle window resize
-            window.addEventListener('resize', onWindowResize);
-
-            // Setup UI
-            setupUI();
-
-            // Start animation loop
-            animate();
-        }
-
-        function createConveyor() {
-            conveyor = new THREE.Group();
-
-            // Conveyor belt base
-            const beltGeometry = new THREE.BoxGeometry(8, 0.3, 1.5);
-            const beltMaterial = new THREE.MeshStandardMaterial({
-                color: 0x333333,
-                roughness: 0.7
-            });
-            const belt = new THREE.Mesh(beltGeometry, beltMaterial);
-            belt.position.set(-2, 2.5, -3);
-            belt.castShadow = true;
-            belt.receiveShadow = true;
-            conveyor.add(belt);
-
-            // Conveyor surface (animated)
-            const surfaceGeometry = new THREE.BoxGeometry(7.8, 0.1, 1.3);
-            const surfaceMaterial = new THREE.MeshStandardMaterial({
-                color: 0x1a1a1a,
-                roughness: 0.5
-            });
-            const surface = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
-            surface.position.set(-2, 2.66, -3);
-            surface.name = 'conveyorSurface';
-            conveyor.add(surface);
-
-            // Conveyor legs
-            const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 2.3);
-            const legMaterial = new THREE.MeshStandardMaterial({ color: 0x444444 });
-
-            [[-5, -3.5], [-5, -2.5], [1, -3.5], [1, -2.5]].forEach(([x, z]) => {
-                const leg = new THREE.Mesh(legGeometry, legMaterial);
-                leg.position.set(x, 1.15, z);
-                leg.castShadow = true;
-                conveyor.add(leg);
-            });
-
-            // Conveyor rollers (visual detail)
-            const rollerGeometry = new THREE.CylinderGeometry(0.08, 0.08, 1.4);
-            const rollerMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
-            for (let x = -5.5; x <= 1.5; x += 0.5) {
-                const roller = new THREE.Mesh(rollerGeometry, rollerMaterial);
-                roller.rotation.x = Math.PI / 2;
-                roller.position.set(x, 2.55, -3);
-                conveyor.add(roller);
+                this.packages = [];
+                this.packagesInCart = [];
+                this.animatingPackages = [];
+                this.pendingPackages = [];
             }
 
-            scene.add(conveyor);
-        }
+            setupLights() {
+                const ambient = new THREE.AmbientLight(0x404040, 0.6);
+                this.scene.add(ambient);
 
-        function createCart() {
-            if (cart) {
-                scene.remove(cart);
+                const directional = new THREE.DirectionalLight(0xffffff, 0.8);
+                directional.position.set(5, 10, 5);
+                directional.castShadow = true;
+                directional.shadow.mapSize.width = 1024;
+                directional.shadow.mapSize.height = 1024;
+                this.scene.add(directional);
+
+                const accent = new THREE.PointLight(this.color, 0.4, 15);
+                accent.position.set(-3, 5, 3);
+                this.scene.add(accent);
             }
 
-            cart = new THREE.Group();
-            const { width, depth, height } = CONFIG.cart;
+            createGround() {
+                const ground = new THREE.Mesh(
+                    new THREE.PlaneGeometry(20, 20),
+                    new THREE.MeshStandardMaterial({ color: 0x16213e, roughness: 0.8 })
+                );
+                ground.rotation.x = -Math.PI / 2;
+                ground.receiveShadow = true;
+                this.scene.add(ground);
 
-            // Cart base
-            const baseGeometry = new THREE.BoxGeometry(width + 0.2, 0.15, depth + 0.2);
-            const baseMaterial = new THREE.MeshStandardMaterial({
-                color: 0x4a4a4a,
-                roughness: 0.6
-            });
-            cartBase = new THREE.Mesh(baseGeometry, baseMaterial);
-            cartBase.position.y = 0.5;
-            cartBase.castShadow = true;
-            cartBase.receiveShadow = true;
-            cart.add(cartBase);
-
-            // Cart walls (wireframe for visibility)
-            const wallMaterial = new THREE.MeshStandardMaterial({
-                color: 0x0f9b8e,
-                transparent: true,
-                opacity: 0.3,
-                side: THREE.DoubleSide
-            });
-
-            // Back wall
-            const backWall = new THREE.Mesh(
-                new THREE.PlaneGeometry(width, height),
-                wallMaterial
-            );
-            backWall.position.set(0, 0.5 + height/2, -depth/2);
-            cart.add(backWall);
-
-            // Front wall
-            const frontWall = new THREE.Mesh(
-                new THREE.PlaneGeometry(width, height),
-                wallMaterial
-            );
-            frontWall.position.set(0, 0.5 + height/2, depth/2);
-            frontWall.rotation.y = Math.PI;
-            cart.add(frontWall);
-
-            // Left wall
-            const leftWall = new THREE.Mesh(
-                new THREE.PlaneGeometry(depth, height),
-                wallMaterial
-            );
-            leftWall.position.set(-width/2, 0.5 + height/2, 0);
-            leftWall.rotation.y = Math.PI / 2;
-            cart.add(leftWall);
-
-            // Right wall
-            const rightWall = new THREE.Mesh(
-                new THREE.PlaneGeometry(depth, height),
-                wallMaterial
-            );
-            rightWall.position.set(width/2, 0.5 + height/2, 0);
-            rightWall.rotation.y = -Math.PI / 2;
-            cart.add(rightWall);
-
-            // Cart frame (edges)
-            const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x0f9b8e });
-            const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(width, height, depth));
-            const edgeLines = new THREE.LineSegments(edges, edgeMaterial);
-            edgeLines.position.y = 0.5 + height/2;
-            cart.add(edgeLines);
-
-            // Wheels
-            const wheelGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.15, 16);
-            const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x222222 });
-
-            [
-                [-width/2 + 0.3, -depth/2 + 0.3],
-                [width/2 - 0.3, -depth/2 + 0.3],
-                [-width/2 + 0.3, depth/2 - 0.3],
-                [width/2 - 0.3, depth/2 - 0.3]
-            ].forEach(([x, z]) => {
-                const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-                wheel.rotation.z = Math.PI / 2;
-                wheel.position.set(x, 0.2, z);
-                wheel.castShadow = true;
-                cart.add(wheel);
-            });
-
-            scene.add(cart);
-        }
-
-        function createPackage(typeIndex = null) {
-            if (typeIndex === null) {
-                typeIndex = Math.floor(Math.random() * CONFIG.packageTypes.length);
+                const grid = new THREE.GridHelper(20, 20, 0x0f3460, 0x0f3460);
+                grid.position.y = 0.01;
+                this.scene.add(grid);
             }
-            const type = CONFIG.packageTypes[typeIndex];
 
-            // Add slight random variation
-            const variation = 0.9 + Math.random() * 0.2;
-            const w = type.w * variation;
-            const d = type.d * variation;
-            const h = type.h * variation;
+            createConveyor() {
+                this.conveyor = new THREE.Group();
 
-            const geometry = new THREE.BoxGeometry(w, h, d);
+                const belt = new THREE.Mesh(
+                    new THREE.BoxGeometry(5, 0.2, 1),
+                    new THREE.MeshStandardMaterial({ color: 0x333333 })
+                );
+                belt.position.set(-1.5, 1.8, -2);
+                belt.castShadow = true;
+                this.conveyor.add(belt);
 
-            // Create cardboard-like material
-            const material = new THREE.MeshStandardMaterial({
-                color: type.color,
-                roughness: 0.8,
-                metalness: 0.1
-            });
+                const surface = new THREE.Mesh(
+                    new THREE.BoxGeometry(4.8, 0.08, 0.9),
+                    new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
+                );
+                surface.position.set(-1.5, 1.91, -2);
+                this.conveyor.add(surface);
 
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
+                // Legs
+                const legGeo = new THREE.CylinderGeometry(0.06, 0.06, 1.7);
+                const legMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+                [[-3.5, -2.4], [-3.5, -1.6], [0.5, -2.4], [0.5, -1.6]].forEach(([x, z]) => {
+                    const leg = new THREE.Mesh(legGeo, legMat);
+                    leg.position.set(x, 0.85, z);
+                    this.conveyor.add(leg);
+                });
 
-            // Add tape detail
-            const tapeGeometry = new THREE.BoxGeometry(w * 0.15, h + 0.01, d + 0.01);
-            const tapeMaterial = new THREE.MeshStandardMaterial({
-                color: 0xd4a76a,
-                roughness: 0.5
-            });
-            const tape = new THREE.Mesh(tapeGeometry, tapeMaterial);
-            mesh.add(tape);
+                this.scene.add(this.conveyor);
+            }
 
-            // Store dimensions
-            mesh.userData = {
-                width: w,
-                depth: d,
-                height: h,
-                volume: w * d * h,
-                type: type.name
-            };
+            createCart() {
+                if (this.cart) {
+                    this.scene.remove(this.cart);
+                }
 
-            return mesh;
-        }
+                this.cart = new THREE.Group();
+                const { width, depth, height } = CONFIG.cart;
 
-        function spawnPackage() {
-            const pkg = createPackage();
-            pkg.position.set(-6, 2.8, -3);
-            scene.add(pkg);
-            packages.push(pkg);
+                // Base
+                const base = new THREE.Mesh(
+                    new THREE.BoxGeometry(width + 0.1, 0.1, depth + 0.1),
+                    new THREE.MeshStandardMaterial({ color: 0x4a4a4a })
+                );
+                base.position.y = 0.35;
+                base.castShadow = true;
+                this.cart.add(base);
 
-            // Add to animation queue
-            animatingPackages.push({
-                mesh: pkg,
-                state: 'conveyor',
-                targetX: 1.5,
-                velocity: new THREE.Vector3(0, 0, 0)
-            });
-        }
+                // Walls
+                const wallMat = new THREE.MeshStandardMaterial({
+                    color: this.color,
+                    transparent: true,
+                    opacity: 0.25,
+                    side: THREE.DoubleSide
+                });
 
-        function findPlacementPosition(pkg) {
-            const { width, depth, height } = CONFIG.cart;
-            const pkgW = pkg.userData.width;
-            const pkgD = pkg.userData.depth;
-            const pkgH = pkg.userData.height;
+                const walls = [
+                    { pos: [0, 0.35 + height/2, -depth/2], rot: [0, 0, 0], size: [width, height] },
+                    { pos: [0, 0.35 + height/2, depth/2], rot: [0, Math.PI, 0], size: [width, height] },
+                    { pos: [-width/2, 0.35 + height/2, 0], rot: [0, Math.PI/2, 0], size: [depth, height] },
+                    { pos: [width/2, 0.35 + height/2, 0], rot: [0, -Math.PI/2, 0], size: [depth, height] }
+                ];
 
-            // Grid-based placement search
-            const gridStep = 0.1;
-            let bestPosition = null;
-            let lowestY = Infinity;
+                walls.forEach(w => {
+                    const wall = new THREE.Mesh(new THREE.PlaneGeometry(...w.size), wallMat);
+                    wall.position.set(...w.pos);
+                    wall.rotation.set(...w.rot);
+                    this.cart.add(wall);
+                });
 
-            for (let x = -width/2 + pkgW/2; x <= width/2 - pkgW/2; x += gridStep) {
-                for (let z = -depth/2 + pkgD/2; z <= depth/2 - pkgD/2; z += gridStep) {
-                    // Find the highest package at this x,z position
-                    let y = 0.58; // Base height (cart floor)
+                // Edge frame
+                const edges = new THREE.LineSegments(
+                    new THREE.EdgesGeometry(new THREE.BoxGeometry(width, height, depth)),
+                    new THREE.LineBasicMaterial({ color: this.color })
+                );
+                edges.position.y = 0.35 + height/2;
+                this.cart.add(edges);
 
-                    for (const placedPkg of packagesInCart) {
-                        if (boxesOverlap2D(
-                            x, z, pkgW, pkgD,
-                            placedPkg.position.x, placedPkg.position.z,
-                            placedPkg.userData.width, placedPkg.userData.depth
-                        )) {
-                            const topY = placedPkg.position.y + placedPkg.userData.height/2;
-                            y = Math.max(y, topY);
+                // Wheels
+                const wheelGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 12);
+                const wheelMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+                const wheelPositions = [
+                    [-width/2 + 0.2, -depth/2 + 0.2],
+                    [width/2 - 0.2, -depth/2 + 0.2],
+                    [-width/2 + 0.2, depth/2 - 0.2],
+                    [width/2 - 0.2, depth/2 - 0.2]
+                ];
+                wheelPositions.forEach(([x, z]) => {
+                    const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+                    wheel.rotation.z = Math.PI / 2;
+                    wheel.position.set(x, 0.12, z);
+                    this.cart.add(wheel);
+                });
+
+                this.scene.add(this.cart);
+            }
+
+            createPackage(typeIndex, seed) {
+                const type = CONFIG.packageTypes[typeIndex];
+
+                // Use seed for consistent random variation between scenes
+                const variation = 0.9 + (seed % 100) / 500;
+                const w = type.w * variation;
+                const d = type.d * variation;
+                const h = type.h * variation;
+
+                const mesh = new THREE.Mesh(
+                    new THREE.BoxGeometry(w, h, d),
+                    new THREE.MeshStandardMaterial({ color: type.color, roughness: 0.8 })
+                );
+                mesh.castShadow = true;
+
+                // Tape
+                const tape = new THREE.Mesh(
+                    new THREE.BoxGeometry(w * 0.15, h + 0.005, d + 0.005),
+                    new THREE.MeshStandardMaterial({ color: 0xd4a76a })
+                );
+                mesh.add(tape);
+
+                mesh.userData = { width: w, depth: d, height: h, volume: w * d * h, type: type.name };
+                return mesh;
+            }
+
+            spawnPackage(typeIndex, seed) {
+                const pkg = this.createPackage(typeIndex, seed);
+                pkg.position.set(-4, 2, -2);
+                this.scene.add(pkg);
+                this.packages.push(pkg);
+
+                if (this.mode === 'optimized') {
+                    this.pendingPackages.push(pkg);
+                    this.animatingPackages.push({
+                        mesh: pkg,
+                        state: 'conveyor',
+                        targetX: 0.8,
+                        velocity: new THREE.Vector3(0, 0, 0),
+                        waitForBatch: true
+                    });
+                } else {
+                    this.animatingPackages.push({
+                        mesh: pkg,
+                        state: 'conveyor',
+                        targetX: 0.8,
+                        velocity: new THREE.Vector3(0, 0, 0)
+                    });
+                }
+            }
+
+            findPlacementPosition(pkg, existingPackages = this.packagesInCart) {
+                const { width, depth, height } = CONFIG.cart;
+                const pkgW = pkg.userData.currentWidth || pkg.userData.width;
+                const pkgD = pkg.userData.currentDepth || pkg.userData.depth;
+                const pkgH = pkg.userData.height;
+
+                const gridStep = 0.08;
+                let bestPosition = null;
+                let lowestY = Infinity;
+
+                for (let x = -width/2 + pkgW/2; x <= width/2 - pkgW/2; x += gridStep) {
+                    for (let z = -depth/2 + pkgD/2; z <= depth/2 - pkgD/2; z += gridStep) {
+                        let y = 0.4;
+
+                        for (const placed of existingPackages) {
+                            const pW = placed.userData.currentWidth || placed.userData.width;
+                            const pD = placed.userData.currentDepth || placed.userData.depth;
+
+                            if (this.boxesOverlap2D(x, z, pkgW, pkgD, placed.position.x, placed.position.z, pW, pD)) {
+                                y = Math.max(y, placed.position.y + placed.userData.height / 2);
+                            }
                         }
-                    }
 
-                    const finalY = y + pkgH/2;
-
-                    // Check if package would exceed cart height
-                    if (finalY + pkgH/2 <= 0.5 + height + 0.5) { // Small tolerance
-                        if (finalY < lowestY) {
+                        const finalY = y + pkgH / 2;
+                        if (finalY + pkgH / 2 <= 0.35 + height + 0.3 && finalY < lowestY) {
                             lowestY = finalY;
                             bestPosition = new THREE.Vector3(x, finalY, z);
                         }
                     }
                 }
+
+                if (!bestPosition) {
+                    const maxY = existingPackages.length > 0
+                        ? Math.max(...existingPackages.map(p => p.position.y + p.userData.height / 2))
+                        : 0.4;
+                    bestPosition = new THREE.Vector3(0, maxY + pkgH / 2, 0);
+                }
+
+                return bestPosition;
             }
 
-            // If no position found, stack on top
-            if (!bestPosition) {
-                const maxY = packagesInCart.reduce((max, p) =>
-                    Math.max(max, p.position.y + p.userData.height/2), 0.58);
-                bestPosition = new THREE.Vector3(0, maxY + pkgH/2, 0);
-            }
+            findOptimizedPlacements() {
+                const { width, depth, height } = CONFIG.cart;
+                const sorted = [...this.pendingPackages].sort((a, b) => b.userData.volume - a.userData.volume);
 
-            return bestPosition;
-        }
+                const placements = [];
+                const virtualPlaced = [...this.packagesInCart];
 
-        function findOptimizedPlacement(packages) {
-            // First Fit Decreasing Height (FFDH) heuristic with 3D adaptation
-            const { width, depth, height } = CONFIG.cart;
+                for (const pkg of sorted) {
+                    const pkgW = pkg.userData.width;
+                    const pkgD = pkg.userData.depth;
+                    const pkgH = pkg.userData.height;
 
-            // Sort packages by volume (largest first)
-            const sorted = [...packages].sort((a, b) => b.userData.volume - a.userData.volume);
+                    let bestPosition = null;
+                    let lowestY = Infinity;
+                    let bestScore = -Infinity;
+                    let bestRotation = 0;
+                    let bestDims = { w: pkgW, d: pkgD };
 
-            const placements = [];
-            const placedBoxes = [...packagesInCart];
+                    const rotations = [
+                        { w: pkgW, d: pkgD, rot: 0 },
+                        { w: pkgD, d: pkgW, rot: Math.PI / 2 }
+                    ];
 
-            for (const pkg of sorted) {
-                const pkgW = pkg.userData.width;
-                const pkgD = pkg.userData.depth;
-                const pkgH = pkg.userData.height;
+                    for (const { w, d, rot } of rotations) {
+                        const gridStep = 0.05;
 
-                let bestPosition = null;
-                let lowestY = Infinity;
-                let bestScore = -Infinity;
+                        for (let x = -width/2 + w/2; x <= width/2 - w/2; x += gridStep) {
+                            for (let z = -depth/2 + d/2; z <= depth/2 - d/2; z += gridStep) {
+                                let y = 0.4;
 
-                // Try different rotations
-                const rotations = [
-                    { w: pkgW, d: pkgD, h: pkgH },
-                    { w: pkgD, d: pkgW, h: pkgH },
-                ];
+                                for (const placed of virtualPlaced) {
+                                    const pW = placed.userData.currentWidth || placed.userData.width;
+                                    const pD = placed.userData.currentDepth || placed.userData.depth;
 
-                for (const rot of rotations) {
-                    const gridStep = 0.05; // Finer grid for optimization
-
-                    for (let x = -width/2 + rot.w/2; x <= width/2 - rot.w/2; x += gridStep) {
-                        for (let z = -depth/2 + rot.d/2; z <= depth/2 - rot.d/2; z += gridStep) {
-                            let y = 0.58;
-
-                            for (const placedPkg of placedBoxes) {
-                                const pW = placedPkg.userData.currentWidth || placedPkg.userData.width;
-                                const pD = placedPkg.userData.currentDepth || placedPkg.userData.depth;
-
-                                if (boxesOverlap2D(x, z, rot.w, rot.d,
-                                    placedPkg.position.x, placedPkg.position.z, pW, pD)) {
-                                    const topY = placedPkg.position.y + placedPkg.userData.height/2;
-                                    y = Math.max(y, topY);
+                                    if (this.boxesOverlap2D(x, z, w, d, placed.position.x, placed.position.z, pW, pD)) {
+                                        y = Math.max(y, placed.position.y + placed.userData.height / 2);
+                                    }
                                 }
-                            }
 
-                            const finalY = y + rot.h/2;
+                                const finalY = y + pkgH / 2;
 
-                            if (finalY + rot.h/2 <= 0.5 + height + 0.5) {
-                                // Score based on position (prefer corners, low positions)
-                                const cornerBonus = (Math.abs(x) + Math.abs(z)) * 0.1;
-                                const heightPenalty = finalY * 2;
-                                const score = cornerBonus - heightPenalty;
+                                if (finalY + pkgH / 2 <= 0.35 + height + 0.3) {
+                                    const cornerBonus = (Math.abs(x) + Math.abs(z)) * 0.15;
+                                    const heightPenalty = finalY * 2.5;
+                                    const score = cornerBonus - heightPenalty;
 
-                                if (finalY < lowestY || (finalY === lowestY && score > bestScore)) {
-                                    lowestY = finalY;
-                                    bestScore = score;
-                                    bestPosition = {
-                                        pos: new THREE.Vector3(x, finalY, z),
-                                        rotation: rot.w !== pkgW ? Math.PI / 2 : 0,
-                                        dims: rot
-                                    };
+                                    if (finalY < lowestY || (Math.abs(finalY - lowestY) < 0.01 && score > bestScore)) {
+                                        lowestY = finalY;
+                                        bestScore = score;
+                                        bestPosition = new THREE.Vector3(x, finalY, z);
+                                        bestRotation = rot;
+                                        bestDims = { w, d };
+                                    }
                                 }
                             }
                         }
                     }
+
+                    if (bestPosition) {
+                        placements.push({ pkg, pos: bestPosition, rotation: bestRotation });
+                        virtualPlaced.push({
+                            position: bestPosition,
+                            userData: {
+                                width: pkgW,
+                                depth: pkgD,
+                                height: pkgH,
+                                currentWidth: bestDims.w,
+                                currentDepth: bestDims.d
+                            }
+                        });
+                    }
                 }
 
-                if (bestPosition) {
-                    placements.push({ pkg, ...bestPosition });
+                return placements;
+            }
 
-                    // Add virtual placed box for collision detection
-                    placedBoxes.push({
-                        position: bestPosition.pos,
-                        userData: {
-                            width: bestPosition.dims.w,
-                            depth: bestPosition.dims.d,
-                            height: bestPosition.dims.h,
-                            currentWidth: bestPosition.dims.w,
-                            currentDepth: bestPosition.dims.d
+            boxesOverlap2D(x1, z1, w1, d1, x2, z2, w2, d2) {
+                return Math.abs(x1 - x2) < (w1 + w2) / 2 - 0.005 &&
+                       Math.abs(z1 - z2) < (d1 + d2) / 2 - 0.005;
+            }
+
+            placePackage(pkg, position, rotation = 0) {
+                pkg.position.copy(position);
+                if (rotation) {
+                    pkg.rotation.y = rotation;
+                    pkg.userData.currentWidth = pkg.userData.depth;
+                    pkg.userData.currentDepth = pkg.userData.width;
+                } else {
+                    pkg.userData.currentWidth = pkg.userData.width;
+                    pkg.userData.currentDepth = pkg.userData.depth;
+                }
+                this.packagesInCart.push(pkg);
+            }
+
+            processBatch() {
+                if (this.pendingPackages.length === 0) return;
+
+                const placements = this.findOptimizedPlacements();
+
+                placements.forEach(({ pkg, pos, rotation }) => {
+                    const anim = this.animatingPackages.find(a => a.mesh === pkg);
+                    if (anim) {
+                        anim.state = 'dropping';
+                        anim.targetPosition = pos;
+                        anim.rotation = rotation;
+                        anim.velocity = new THREE.Vector3(0, 0, 0);
+                    }
+                });
+
+                this.pendingPackages = [];
+            }
+
+            update(speedMultiplier) {
+                for (let i = this.animatingPackages.length - 1; i >= 0; i--) {
+                    const anim = this.animatingPackages[i];
+                    const pkg = anim.mesh;
+
+                    if (anim.state === 'conveyor') {
+                        pkg.position.x += CONFIG.conveyorSpeed * 0.016 * speedMultiplier;
+                        pkg.position.y = 2 + Math.sin(Date.now() * 0.008) * 0.015;
+
+                        if (pkg.position.x >= anim.targetX) {
+                            if (anim.waitForBatch) {
+                                anim.state = 'waiting';
+                                pkg.position.x = anim.targetX;
+
+                                if (this.pendingPackages.length >= 10 ||
+                                    this.packagesInCart.length + this.pendingPackages.length >= CONFIG.maxPackagesPerCart) {
+                                    this.processBatch();
+                                }
+                            } else {
+                                anim.state = 'dropping';
+                                anim.targetPosition = this.findPlacementPosition(pkg);
+                                anim.velocity = new THREE.Vector3(0, 0, 0);
+                            }
                         }
-                    });
-                } else {
-                    const maxY = placedBoxes.reduce((max, p) =>
-                        Math.max(max, p.position.y + p.userData.height/2), 0.58);
-                    placements.push({
-                        pkg,
-                        pos: new THREE.Vector3(0, maxY + pkgH/2, 0),
-                        rotation: 0,
-                        dims: { w: pkgW, d: pkgD, h: pkgH }
-                    });
+                    } else if (anim.state === 'waiting') {
+                        if (this.pendingPackages.length >= 10 ||
+                            this.packagesInCart.length + this.pendingPackages.length >= CONFIG.maxPackagesPerCart) {
+                            this.processBatch();
+                        }
+                    } else if (anim.state === 'dropping') {
+                        const target = anim.targetPosition;
+                        const speed = CONFIG.dropSpeed * 0.016 * speedMultiplier;
+
+                        pkg.position.x += (target.x - pkg.position.x) * speed;
+                        pkg.position.z += (target.z - pkg.position.z) * speed;
+
+                        anim.velocity.y -= 0.012 * speedMultiplier;
+                        pkg.position.y += anim.velocity.y;
+
+                        if (pkg.position.y <= target.y || pkg.position.distanceTo(target) < 0.05) {
+                            this.placePackage(pkg, target, anim.rotation || 0);
+                            this.animatingPackages.splice(i, 1);
+                        }
+                    }
                 }
             }
 
-            return placements;
-        }
-
-        function boxesOverlap2D(x1, z1, w1, d1, x2, z2, w2, d2) {
-            return Math.abs(x1 - x2) < (w1 + w2) / 2 - 0.01 &&
-                   Math.abs(z1 - z2) < (d1 + d2) / 2 - 0.01;
-        }
-
-        function placePackageInCart(pkg, position, rotation = 0) {
-            if (rotation) {
-                pkg.rotation.y = rotation;
-                // Swap stored dimensions for collision detection
-                const temp = pkg.userData.width;
-                pkg.userData.currentWidth = pkg.userData.depth;
-                pkg.userData.currentDepth = temp;
-            } else {
-                pkg.userData.currentWidth = pkg.userData.width;
-                pkg.userData.currentDepth = pkg.userData.depth;
+            render() {
+                this.controls.update();
+                this.renderer.render(this.scene, this.camera);
             }
 
-            packagesInCart.push(pkg);
-            totalPackages++;
-
-            // Check for snapshot (every 10 packages)
-            if (packagesInCart.length % 10 === 0) {
-                takeSnapshot();
+            resize() {
+                const w = this.container.clientWidth;
+                const h = this.container.clientHeight;
+                this.camera.aspect = w / h;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(w, h);
             }
 
-            // Check for cart full
-            if (packagesInCart.length >= CONFIG.maxPackagesPerCart) {
-                startNewCart();
+            getStats() {
+                const count = this.packagesInCart.length;
+                if (count === 0) return { count: 0, efficiency: 0, maxHeight: 0 };
+
+                const totalVolume = this.packagesInCart.reduce((sum, p) => sum + p.userData.volume, 0);
+                const maxY = Math.max(...this.packagesInCart.map(p => p.position.y + p.userData.height / 2));
+                const usedHeight = maxY - 0.35;
+                const usedVolume = CONFIG.cart.width * CONFIG.cart.depth * usedHeight;
+                const efficiency = usedVolume > 0 ? (totalVolume / usedVolume) * 100 : 0;
+
+                return { count, efficiency, maxHeight: usedHeight };
             }
 
-            updateStats();
-        }
-
-        function takeSnapshot() {
-            const count = packagesInCart.length;
-
-            // Create mini canvas for snapshot
-            const snapshotRenderer = new THREE.WebGLRenderer({ antialias: true });
-            snapshotRenderer.setSize(120, 90);
-
-            const snapshotScene = new THREE.Scene();
-            snapshotScene.background = new THREE.Color(0x1a1a2e);
-
-            const snapshotCamera = new THREE.PerspectiveCamera(60, 120/90, 0.1, 100);
-            snapshotCamera.position.set(6, 6, 6);
-            snapshotCamera.lookAt(0, 2, 0);
-
-            // Clone cart and packages for snapshot
-            const cartClone = cart.clone();
-            snapshotScene.add(cartClone);
-
-            packagesInCart.forEach(pkg => {
-                const clone = pkg.clone();
-                snapshotScene.add(clone);
-            });
-
-            // Add light
-            const light = new THREE.DirectionalLight(0xffffff, 1);
-            light.position.set(5, 10, 5);
-            snapshotScene.add(light);
-            snapshotScene.add(new THREE.AmbientLight(0x404040));
-
-            snapshotRenderer.render(snapshotScene, snapshotCamera);
-
-            const dataURL = snapshotRenderer.domElement.toDataURL();
-            snapshotRenderer.dispose();
-
-            snapshots.push({
-                count,
-                mode: packingMode,
-                dataURL,
-                efficiency: calculateEfficiency()
-            });
-
-            updateSnapshotGallery();
-        }
-
-        function updateSnapshotGallery() {
-            const gallery = document.getElementById('snapshot-gallery');
-            gallery.innerHTML = '';
-
-            snapshots.forEach((snap, index) => {
-                const img = document.createElement('img');
-                img.src = snap.dataURL;
-                img.className = 'snapshot-thumb';
-                img.title = `${snap.count} packages (${snap.mode}) - ${snap.efficiency.toFixed(1)}% efficiency`;
-                gallery.appendChild(img);
-            });
-        }
-
-        function calculateEfficiency() {
-            if (packagesInCart.length === 0) return 0;
-
-            const totalPackageVolume = packagesInCart.reduce((sum, pkg) =>
-                sum + pkg.userData.volume, 0);
-
-            // Calculate used volume (bounding box)
-            let maxY = 0;
-            packagesInCart.forEach(pkg => {
-                const topY = pkg.position.y + pkg.userData.height/2 - 0.5;
-                maxY = Math.max(maxY, topY);
-            });
-
-            const usedVolume = CONFIG.cart.width * CONFIG.cart.depth * maxY;
-            const cartVolume = CONFIG.cart.width * CONFIG.cart.depth * CONFIG.cart.height;
-
-            return usedVolume > 0 ? (totalPackageVolume / usedVolume) * 100 : 0;
-        }
-
-        function startNewCart() {
-            // Store stats
-            if (packingMode === 'sequential') {
-                sequentialStats = {
-                    efficiency: calculateEfficiency(),
-                    maxHeight: getMaxHeight()
-                };
-            } else {
-                optimizedStats = {
-                    efficiency: calculateEfficiency(),
-                    maxHeight: getMaxHeight()
-                };
+            reset() {
+                this.packages.forEach(p => this.scene.remove(p));
+                this.packages = [];
+                this.packagesInCart = [];
+                this.animatingPackages = [];
+                this.pendingPackages = [];
+                this.createCart();
             }
-
-            // Animate old cart away
-            const oldCart = cart;
-            const oldPackages = [...packagesInCart];
-
-            // Move everything to the side
-            const moveAway = () => {
-                oldCart.position.x += 0.1;
-                oldPackages.forEach(p => p.position.x += 0.1);
-
-                if (oldCart.position.x < 10) {
-                    requestAnimationFrame(moveAway);
-                } else {
-                    scene.remove(oldCart);
-                    oldPackages.forEach(p => scene.remove(p));
-                }
-            };
-            moveAway();
-
-            // Create new cart
-            packagesInCart = [];
-            cartNumber++;
-            createCart();
-            updateStats();
         }
 
-        function getMaxHeight() {
-            if (packagesInCart.length === 0) return 0;
-            return Math.max(...packagesInCart.map(pkg =>
-                pkg.position.y + pkg.userData.height/2 - 0.5));
+        // ==================== MAIN APP ====================
+        let seqScene, optScene;
+        let isRunning = false;
+        let isPaused = false;
+        let speedMultiplier = 2;
+        let spawnTimer = 0;
+        let packageSeed = 0;
+        let cartNumber = 1;
+        const SPAWN_INTERVAL = 1500;
+
+        function init() {
+            const seqPanel = document.getElementById('sequential-panel');
+            const optPanel = document.getElementById('optimized-panel');
+
+            seqScene = new PackingScene(seqPanel, 'sequential', 0xe94560);
+            optScene = new PackingScene(optPanel, 'optimized', 0x0f9b8e);
+
+            // Sync camera controls
+            seqScene.controls.addEventListener('change', () => {
+                optScene.camera.position.copy(seqScene.camera.position);
+                optScene.camera.quaternion.copy(seqScene.camera.quaternion);
+                optScene.controls.target.copy(seqScene.controls.target);
+            });
+
+            optScene.controls.addEventListener('change', () => {
+                seqScene.camera.position.copy(optScene.camera.position);
+                seqScene.camera.quaternion.copy(optScene.camera.quaternion);
+                seqScene.controls.target.copy(optScene.controls.target);
+            });
+
+            setupUI();
+            window.addEventListener('resize', onResize);
+            animate();
+        }
+
+        function spawnPackages() {
+            const typeIndex = Math.floor(Math.random() * CONFIG.packageTypes.length);
+            packageSeed++;
+
+            seqScene.spawnPackage(typeIndex, packageSeed);
+            optScene.spawnPackage(typeIndex, packageSeed);
         }
 
         function updateStats() {
-            document.getElementById('package-count').textContent = packagesInCart.length;
-            document.getElementById('cart-number').textContent = cartNumber;
-            document.getElementById('total-packages').textContent = totalPackages;
+            const seqStats = seqScene.getStats();
+            const optStats = optScene.getStats();
 
-            const efficiency = calculateEfficiency();
-            document.getElementById('volume-used').textContent = efficiency.toFixed(1) + '%';
+            document.getElementById('seq-count').textContent = seqStats.count;
+            document.getElementById('seq-efficiency').textContent = seqStats.efficiency.toFixed(1) + '%';
+            document.getElementById('seq-height').textContent = seqStats.maxHeight.toFixed(2);
 
-            if (packingMode === 'sequential') {
-                document.getElementById('seq-efficiency').textContent = efficiency.toFixed(1) + '%';
-                document.getElementById('seq-height').textContent = getMaxHeight().toFixed(2);
-            } else {
-                document.getElementById('opt-efficiency').textContent = efficiency.toFixed(1) + '%';
-                document.getElementById('opt-height').textContent = getMaxHeight().toFixed(2);
-            }
+            document.getElementById('opt-count').textContent = optStats.count;
+            document.getElementById('opt-efficiency').textContent = optStats.efficiency.toFixed(1) + '%';
+            document.getElementById('opt-height').textContent = optStats.maxHeight.toFixed(2);
+
+            document.getElementById('sum-seq-count').textContent = seqStats.count;
+            document.getElementById('sum-opt-count').textContent = optStats.count;
+            document.getElementById('sum-seq-eff').textContent = seqStats.efficiency.toFixed(1) + '%';
+            document.getElementById('sum-opt-eff').textContent = optStats.efficiency.toFixed(1) + '%';
+            document.getElementById('sum-seq-height').textContent = seqStats.maxHeight.toFixed(2);
+            document.getElementById('sum-opt-height').textContent = optStats.maxHeight.toFixed(2);
+
+            // Highlight winner
+            const seqEffEl = document.getElementById('sum-seq-eff');
+            const optEffEl = document.getElementById('sum-opt-eff');
+            seqEffEl.classList.toggle('winner', seqStats.efficiency > optStats.efficiency);
+            optEffEl.classList.toggle('winner', optStats.efficiency > seqStats.efficiency);
         }
 
         function animate() {
             requestAnimationFrame(animate);
 
             if (isRunning && !isPaused) {
-                updateAnimations();
-            }
+                spawnTimer += 16 * speedMultiplier;
 
-            controls.update();
-            renderer.render(scene, camera);
-        }
-
-        let spawnTimer = 0;
-        const SPAWN_INTERVAL = 2000; // ms between spawns
-
-        function updateAnimations() {
-            const delta = 16 * speedMultiplier; // Approximate frame time
-
-            // Spawn new packages
-            spawnTimer += delta;
-            if (spawnTimer >= SPAWN_INTERVAL / speedMultiplier) {
-                spawnTimer = 0;
-                if (packagesInCart.length < CONFIG.maxPackagesPerCart) {
-                    if (packingMode === 'sequential') {
-                        spawnPackage();
-                    } else {
-                        // Optimized mode: batch packages
-                        const pkg = createPackage();
-                        pkg.position.set(-6, 2.8, -3);
-                        pkg.visible = true;
-                        scene.add(pkg);
-                        packages.push(pkg);
-                        pendingPackages.push(pkg);
-
-                        animatingPackages.push({
-                            mesh: pkg,
-                            state: 'conveyor',
-                            targetX: 1.5,
-                            velocity: new THREE.Vector3(0, 0, 0),
-                            waitForBatch: true
-                        });
+                if (spawnTimer >= SPAWN_INTERVAL) {
+                    spawnTimer = 0;
+                    const maxCount = Math.max(seqScene.packagesInCart.length, optScene.packagesInCart.length);
+                    if (maxCount < CONFIG.maxPackagesPerCart) {
+                        spawnPackages();
                     }
                 }
+
+                seqScene.update(speedMultiplier);
+                optScene.update(speedMultiplier);
+                updateStats();
             }
 
-            // Update animating packages
-            for (let i = animatingPackages.length - 1; i >= 0; i--) {
-                const anim = animatingPackages[i];
-                const pkg = anim.mesh;
-
-                if (anim.state === 'conveyor') {
-                    // Move along conveyor
-                    pkg.position.x += CONFIG.conveyorSpeed * 0.016 * speedMultiplier;
-
-                    // Add slight bobbing
-                    pkg.position.y = 2.8 + Math.sin(Date.now() * 0.01) * 0.02;
-
-                    if (pkg.position.x >= anim.targetX) {
-                        if (anim.waitForBatch && pendingPackages.length < 10 &&
-                            packagesInCart.length + pendingPackages.length < CONFIG.maxPackagesPerCart) {
-                            // Wait at end of conveyor for batch
-                            pkg.position.x = anim.targetX;
-                            anim.state = 'waiting';
-                        } else if (anim.waitForBatch) {
-                            // Process batch
-                            anim.state = 'waiting';
-                            processBatch();
-                        } else {
-                            // Sequential mode: drop immediately
-                            anim.state = 'dropping';
-                            anim.targetPosition = findPlacementPosition(pkg);
-                        }
-                    }
-                } else if (anim.state === 'waiting') {
-                    // Package waiting at end of conveyor
-                    pkg.position.x = anim.targetX;
-
-                    // Check if batch should be processed
-                    if (pendingPackages.length >= 10 ||
-                        packagesInCart.length + pendingPackages.length >= CONFIG.maxPackagesPerCart) {
-                        processBatch();
-                    }
-                } else if (anim.state === 'dropping') {
-                    // Drop into cart
-                    const target = anim.targetPosition;
-
-                    // Arc trajectory
-                    const dx = target.x - pkg.position.x;
-                    const dz = target.z - pkg.position.z;
-                    const dy = target.y - pkg.position.y;
-
-                    const speed = CONFIG.dropSpeed * 0.016 * speedMultiplier;
-
-                    pkg.position.x += dx * speed;
-                    pkg.position.z += dz * speed;
-
-                    // Gravity-like drop
-                    anim.velocity.y -= 0.01 * speedMultiplier;
-                    pkg.position.y += anim.velocity.y;
-
-                    // Check if reached target
-                    const dist = pkg.position.distanceTo(target);
-                    if (dist < 0.1 || pkg.position.y <= target.y) {
-                        pkg.position.copy(target);
-                        if (anim.rotation) {
-                            pkg.rotation.y = anim.rotation;
-                        }
-                        placePackageInCart(pkg, target, anim.rotation || 0);
-                        animatingPackages.splice(i, 1);
-                    }
-                }
-            }
-        }
-
-        function processBatch() {
-            if (pendingPackages.length === 0) return;
-
-            // Get optimized placements
-            const placements = findOptimizedPlacement(pendingPackages);
-
-            // Update animations with optimized positions
-            placements.forEach(placement => {
-                const anim = animatingPackages.find(a => a.mesh === placement.pkg);
-                if (anim) {
-                    anim.state = 'dropping';
-                    anim.targetPosition = placement.pos;
-                    anim.rotation = placement.rotation;
-                    anim.velocity = new THREE.Vector3(0, 0, 0);
-                }
-            });
-
-            pendingPackages = [];
+            seqScene.render();
+            optScene.render();
         }
 
         function setupUI() {
-            // Cart dimension controls
+            // Dimension selects
             ['width', 'depth', 'height'].forEach(dim => {
-                const slider = document.getElementById(`cart-${dim}`);
+                const select = document.getElementById(`cart-${dim}`);
                 const display = document.getElementById(`cart-${dim}-val`);
 
-                slider.addEventListener('input', () => {
-                    display.textContent = slider.value;
-                    CONFIG.cart[dim] = parseFloat(slider.value);
+                select.addEventListener('change', () => {
+                    const val = parseFloat(select.value);
+                    display.textContent = val;
+                    CONFIG.cart[dim] = val;
                     if (!isRunning) {
-                        createCart();
+                        seqScene.createCart();
+                        optScene.createCart();
                     }
                 });
             });
 
-            // Speed control
+            // Speed
             const speedSlider = document.getElementById('speed');
             const speedDisplay = document.getElementById('speed-val');
             speedSlider.addEventListener('input', () => {
@@ -1074,24 +980,7 @@
                 speedDisplay.textContent = speedMultiplier;
             });
 
-            // Mode toggle
-            document.getElementById('toggle-mode').addEventListener('click', () => {
-                packingMode = packingMode === 'sequential' ? 'optimized' : 'sequential';
-                const display = document.getElementById('mode-display');
-                const btn = document.getElementById('toggle-mode');
-
-                if (packingMode === 'sequential') {
-                    display.textContent = 'Sequential Arrival (Tetris)';
-                    display.className = 'mode-indicator mode-sequential';
-                    btn.textContent = 'Switch to Optimized Mode';
-                } else {
-                    display.textContent = 'Optimized (Batch every 10)';
-                    display.className = 'mode-indicator mode-optimized';
-                    btn.textContent = 'Switch to Sequential Mode';
-                }
-            });
-
-            // Control buttons
+            // Buttons
             document.getElementById('start-btn').addEventListener('click', () => {
                 isRunning = true;
                 isPaused = false;
@@ -1103,47 +992,16 @@
                 document.getElementById('pause-btn').textContent = isPaused ? 'Resume' : 'Pause';
             });
 
-            document.getElementById('reset-btn').addEventListener('click', () => {
-                reset();
-            });
+            document.getElementById('reset-btn').addEventListener('click', reset);
 
             document.getElementById('add-10-btn').addEventListener('click', () => {
-                // Quickly add 10 packages
                 for (let i = 0; i < 10; i++) {
                     setTimeout(() => {
-                        if (packagesInCart.length < CONFIG.maxPackagesPerCart) {
-                            const pkg = createPackage();
-                            scene.add(pkg);
-                            packages.push(pkg);
-
-                            if (packingMode === 'optimized') {
-                                pendingPackages.push(pkg);
-                            }
-
-                            const position = packingMode === 'sequential'
-                                ? findPlacementPosition(pkg)
-                                : null;
-
-                            if (packingMode === 'sequential') {
-                                pkg.position.copy(position);
-                                placePackageInCart(pkg, position);
-                            }
+                        const maxCount = Math.max(seqScene.packagesInCart.length, optScene.packagesInCart.length);
+                        if (maxCount < CONFIG.maxPackagesPerCart) {
+                            spawnPackages();
                         }
-                    }, i * 100);
-                }
-
-                if (packingMode === 'optimized') {
-                    setTimeout(() => {
-                        const placements = findOptimizedPlacement(pendingPackages);
-                        placements.forEach(placement => {
-                            placement.pkg.position.copy(placement.pos);
-                            if (placement.rotation) {
-                                placement.pkg.rotation.y = placement.rotation;
-                            }
-                            placePackageInCart(placement.pkg, placement.pos, placement.rotation);
-                        });
-                        pendingPackages = [];
-                    }, 1100);
+                    }, i * 80);
                 }
             });
         }
@@ -1151,39 +1009,24 @@
         function reset() {
             isRunning = false;
             isPaused = false;
-
-            // Remove all packages
-            packages.forEach(pkg => scene.remove(pkg));
-            packages = [];
-            packagesInCart = [];
-            animatingPackages = [];
-            pendingPackages = [];
-
-            cartNumber = 1;
-            totalPackages = 0;
             spawnTimer = 0;
-            snapshots = [];
+            packageSeed = 0;
+            cartNumber = 1;
 
-            createCart();
+            seqScene.reset();
+            optScene.reset();
             updateStats();
-            updateSnapshotGallery();
 
-            document.getElementById('start-btn').textContent = 'Start Simulation';
+            document.getElementById('start-btn').textContent = 'Start';
             document.getElementById('pause-btn').textContent = 'Pause';
-            document.getElementById('seq-efficiency').textContent = '0%';
-            document.getElementById('seq-height').textContent = '0';
-            document.getElementById('opt-efficiency').textContent = '0%';
-            document.getElementById('opt-height').textContent = '0';
+            document.getElementById('cart-number').textContent = '1';
         }
 
-        function onWindowResize() {
-            const container = document.getElementById('canvas-container');
-            camera.aspect = container.clientWidth / container.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
+        function onResize() {
+            seqScene.resize();
+            optScene.resize();
         }
 
-        // Initialize
         init();
     </script>
 </body>
