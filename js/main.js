@@ -102,20 +102,24 @@ function animate() {
 }
 
 function setupUI() {
-    // Dimension selects
+    // Dimension inputs
     ['width', 'depth', 'height'].forEach(dim => {
-        const select = document.getElementById(`cart-${dim}`);
-        const display = document.getElementById(`cart-${dim}-val`);
+        const input = document.getElementById(`cart-${dim}`);
 
-        select.addEventListener('change', () => {
-            const val = parseFloat(select.value);
-            display.textContent = val;
+        const updateDimension = () => {
+            let val = parseFloat(input.value);
+            // Clamp value to valid range
+            val = Math.max(6, Math.min(48, val));
+            input.value = val;
             CONFIG.cart[dim] = val;
             if (!isRunning) {
                 seqScene.createCart();
                 optScene.createCart();
             }
-        });
+        };
+
+        input.addEventListener('change', updateDimension);
+        input.addEventListener('input', updateDimension);
     });
 
     // Speed

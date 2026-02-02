@@ -51,43 +51,26 @@
             <h1>📦 Bin Packing Comparison</h1>
 
             <h2>Cart Dimensions</h2>
-            <div class="control-group">
-                <label>Width: <span id="cart-width-val">12</span><span class="unit-label">"</span></label>
-                <select id="cart-width">
-                    <option value="8">8"</option>
-                    <option value="10">10"</option>
-                    <option value="12" selected>12"</option>
-                    <option value="14">14"</option>
-                    <option value="16">16"</option>
-                    <option value="18">18"</option>
-                    <option value="20">20"</option>
-                    <option value="24">24"</option>
-                </select>
+            <div class="control-group dimension-input">
+                <label>Width</label>
+                <div class="input-with-unit">
+                    <input type="number" id="cart-width" value="24" min="6" max="48" step="1">
+                    <span class="unit-label">"</span>
+                </div>
             </div>
-            <div class="control-group">
-                <label>Depth: <span id="cart-depth-val">12</span><span class="unit-label">"</span></label>
-                <select id="cart-depth">
-                    <option value="8">8"</option>
-                    <option value="10">10"</option>
-                    <option value="12" selected>12"</option>
-                    <option value="14">14"</option>
-                    <option value="16">16"</option>
-                    <option value="18">18"</option>
-                    <option value="20">20"</option>
-                    <option value="24">24"</option>
-                </select>
+            <div class="control-group dimension-input">
+                <label>Depth</label>
+                <div class="input-with-unit">
+                    <input type="number" id="cart-depth" value="18" min="6" max="48" step="1">
+                    <span class="unit-label">"</span>
+                </div>
             </div>
-            <div class="control-group">
-                <label>Height: <span id="cart-height-val">14</span><span class="unit-label">"</span></label>
-                <select id="cart-height">
-                    <option value="10">10"</option>
-                    <option value="12">12"</option>
-                    <option value="14" selected>14"</option>
-                    <option value="16">16"</option>
-                    <option value="18">18"</option>
-                    <option value="20">20"</option>
-                    <option value="24">24"</option>
-                </select>
+            <div class="control-group dimension-input">
+                <label>Height</label>
+                <div class="input-with-unit">
+                    <input type="number" id="cart-height" value="24" min="6" max="48" step="1">
+                    <span class="unit-label">"</span>
+                </div>
             </div>
 
             <h2>Simulation</h2>

@@ -10,7 +10,7 @@ export class PackingScene {
         this.scene.background = new THREE.Color(0x1a1a2e);
 
         this.camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
-        this.camera.position.set(3, 2.5, 3);
+        this.camera.position.set(2.5, 2, 2.5);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(container.clientWidth, container.clientHeight);
@@ -234,7 +234,7 @@ export class PackingScene {
         const pkgD = pkg.userData.currentDepth || pkg.userData.depth;
         const pkgH = pkg.userData.height;
 
-        const gridStep = 0.04;
+        const gridStep = 0.02;
         let bestPosition = null;
         let lowestY = Infinity;
 

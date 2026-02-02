@@ -278,3 +278,50 @@ button {
     color: #666;
     font-size: 0.9em;
 }
+
+/* Dimension input styling */
+.dimension-input {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.dimension-input label {
+    flex: 0 0 50px;
+    margin-bottom: 0;
+}
+
+.input-with-unit {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+}
+
+.input-with-unit input[type="number"] {
+    width: 70px;
+    padding: 6px 8px;
+    border: 1px solid #0f3460;
+    border-radius: 4px;
+    background: #1a1a2e;
+    color: #e8e8e8;
+    font-size: 0.9em;
+    text-align: right;
+}
+
+.input-with-unit input[type="number"]:focus {
+    outline: none;
+    border-color: #0f9b8e;
+}
+
+/* Hide number input spinners */
+.input-with-unit input[type="number"]::-webkit-outer-spin-button,
+.input-with-unit input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.input-with-unit input[type="number"] {
+    -moz-appearance: textfield;
+}
