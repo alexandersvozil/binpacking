@@ -1,0 +1,280 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a1a2e;
+    overflow: hidden;
+}
+
+#container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+}
+
+#views-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#canvases {
+    flex: 1;
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: #0f0f1a;
+}
+
+.view-panel {
+    flex: 1;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.view-panel canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.view-label {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.95em;
+    z-index: 10;
+    text-align: center;
+}
+
+.view-label.sequential {
+    background: rgba(233, 69, 96, 0.9);
+    color: white;
+}
+
+.view-label.optimized {
+    background: rgba(15, 155, 142, 0.9);
+    color: white;
+}
+
+.view-stats {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    background: rgba(22, 33, 62, 0.95);
+    padding: 12px;
+    border-radius: 8px;
+    color: #e8e8e8;
+    font-size: 0.8em;
+}
+
+.view-stats .stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 4px 0;
+}
+
+.view-stats .stat-value {
+    font-weight: bold;
+}
+
+.view-stats .stat-value.sequential {
+    color: #e94560;
+}
+
+.view-stats .stat-value.optimized {
+    color: #0f9b8e;
+}
+
+.repack-btn {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 14px;
+    background: rgba(233, 69, 96, 0.9);
+    color: white;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 0.8em;
+    font-weight: 600;
+    z-index: 10;
+    transition: all 0.3s;
+}
+
+.repack-btn:hover {
+    background: rgba(255, 107, 107, 1);
+    transform: translateX(-50%) scale(1.05);
+}
+
+.repack-btn:disabled {
+    background: rgba(100, 100, 100, 0.5);
+    cursor: not-allowed;
+}
+
+#controls {
+    width: 280px;
+    background: #16213e;
+    padding: 15px;
+    overflow-y: auto;
+    color: #e8e8e8;
+    border-left: 2px solid #0f3460;
+}
+
+h1 {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    color: #e94560;
+    text-align: center;
+}
+
+h2 {
+    font-size: 0.95em;
+    margin: 15px 0 8px;
+    color: #0f9b8e;
+    border-bottom: 1px solid #0f3460;
+    padding-bottom: 4px;
+}
+
+.control-group {
+    margin-bottom: 12px;
+}
+
+label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.85em;
+    color: #a8a8a8;
+}
+
+select, input[type="range"] {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #0f3460;
+    border-radius: 4px;
+    background: #1a1a2e;
+    color: #e8e8e8;
+}
+
+select {
+    cursor: pointer;
+}
+
+input[type="range"] {
+    padding: 0;
+    cursor: pointer;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin: 4px 0;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: #e94560;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #ff6b6b;
+}
+
+.btn-secondary {
+    background: #0f3460;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #1a4b8c;
+}
+
+.btn-row {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-row button {
+    flex: 1;
+}
+
+.comparison-summary {
+    background: #1a1a2e;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 10px 0;
+}
+
+.comparison-summary h3 {
+    font-size: 0.8em;
+    color: #888;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.comparison-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 6px 0;
+    font-size: 0.85em;
+}
+
+.comparison-row .label {
+    color: #888;
+}
+
+.comparison-row .values {
+    display: flex;
+    gap: 10px;
+}
+
+.comparison-row .seq {
+    color: #e94560;
+    font-weight: bold;
+}
+
+.comparison-row .opt {
+    color: #0f9b8e;
+    font-weight: bold;
+}
+
+.winner {
+    text-decoration: underline;
+}
+
+.speed-display {
+    text-align: center;
+    color: #a8a8a8;
+    font-size: 0.8em;
+    margin-top: 3px;
+}
+
+.info-text {
+    font-size: 0.75em;
+    color: #666;
+    text-align: center;
+    margin-top: 5px;
+}
+
+.unit-label {
+    color: #666;
+    font-size: 0.9em;
+}
